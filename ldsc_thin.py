@@ -50,7 +50,7 @@ def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
 
-def _ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
+def _ldscore(bfile, genotype, phenotype, gwas_snps):
     '''
     Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
     reference panel genotypes.
@@ -74,6 +74,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
     # snp list
     #m = len(array_snps.IDList)
     #annot_matrix, annot_colnames, keep_snps = None, None, None,
+    annot_matrix = None
     #n_annot = 1
 
     keep_snps_ref = __filter_bim__(gwas_snps, array_snps)
@@ -83,14 +84,19 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
     # read fam
     array_indivs = ind_obj(ind_file)
     genotype_indivs = find_obj(find_file)
+    phenotype_info = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
+    phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_info, on='IID')
+
     n = len(array_indivs.IDList)
     m = len(genotype_indivs.IDList)
     # read keep_indivs
-    keep_indivs = None
-
+    keep_indivs_ref = None
+    keep_indivs_genotype = phenotype_info['IID']
     # read genotype array
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps_ref,
-        keep_indivs=keep_indivs, mafMin=None)
+        keep_indivs=keep_indivs_ref, mafMin=None)
+    geno_farray = farray_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
+        keep_indivs=None, mafMin=None)
 
     #determine block widths
 
@@ -123,7 +129,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
     return df
 
 
-def ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
+def ldscore(bfile, genotype, phenotype, gwas_snps):
     df = None
     if '@' in bfile:
         all_dfs = []
@@ -131,9 +137,9 @@ def ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
             cur_bfile = bfile.replace('@', str(i))
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(cur_bfile, cur_genotype, phenotype, gwas_snps, reversed_alleles_ref))
+                all_dfs.append(_ldscore(cur_bfile, cur_genotype, phenotype, gwas_snps))
             else:
-                all_dfs.append(_ldscore(cur_bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref))
+                all_dfs.append(_ldscore(cur_bfile, genotype, phenotype, gwas_snps))
             print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
@@ -141,11 +147,11 @@ def ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref):
             all_dfs = []
             for i in range(1, 23):
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(bfile, cur_genotype, phenotype, gwas_snps, reversed_alleles_ref))
+                all_dfs.append(_ldscore(bfile, cur_genotype, phenotype, gwas_snps))
                 print('Computed LD scores for chromosome {}'.format(i))
             df = pd.concat(all_dfs)
         else:
-            df = _ldscore(bfile, genotype, phenotype, gwas_snps, reversed_alleles_ref)
+            df = _ldscore(bfile, genotype, phenotype, gwas_snps)
 
     #numeric = df._get_numeric_data()
     #numeric[numeric < 0] = 0

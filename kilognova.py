@@ -45,9 +45,9 @@ def pipeline(args):
         raise ValueError('--out flag points to an invalid path.')
 
     print('Preparing files for analysis...')
-    gwas_snps, reversed_alleles_ref, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2)
+    gwas_snps, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2)
     print('Calculating LD scores...')
-    ld_scores, N1 = ldscore(args.bfile, args.genotype, args.phenotype, gwas_snps, reversed_alleles_ref)
+    ld_scores, N1 = ldscore(args.bfile, args.genotype, args.phenotype, gwas_snps)
     gwas_snps = gwas_snps[gwas_snps['SNP'].isin(ld_scores['SNP'])]
     print('{} SNPs included in our analysis...'.format(len(gwas_snps)))
     print('Calculating genetic covariance...')

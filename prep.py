@@ -24,8 +24,8 @@ def allign_alleles(df):
     reversed_alleles_y = (((a[0] == a[5]) & (a[1] == a[4])) |
         ((a[0] == 3 - a[5]) & (a[1] == 3 - a[4])))
     df['Z_y'] *= -2 * reversed_alleles_y + 1
+    df['reversed'] = reversed_alleles_gen
     df = df[((matched_alleles_y|reversed_alleles_y)&(matched_alleles_gen|reversed_alleles_gen))]
-    return reversed_alleles_gen
 
 
 def get_files(file_name):
@@ -72,7 +72,7 @@ def prep(bfile, genotype, sumstats2, N2):
     # take overlap between output and ref genotype files
     df = pd.merge(bim, genotype_bim, on=['SNP']).merge(summary_stats, on=['SNP'])
     # flip sign of z-score for allele reversals
-    reversed_alleles_ref = allign_alleles(df)
+    allign_alleles(df)
     df = df.drop_duplicates(subset='SNP', keep=False)
     
     if N2 is not None:
@@ -80,4 +80,4 @@ def prep(bfile, genotype, sumstats2, N2):
     else:
         N2 = summary_stats['N_y'].max()
     df.rename(columns={'CHR_ref':'CHR'}, inplace=True)
-    return (df[['CHR', 'SNP', 'Z_y']], reversed_alleles_ref, N2)
+    return df[['CHR', 'SNP', 'Z_y', 'reversed']], N2
