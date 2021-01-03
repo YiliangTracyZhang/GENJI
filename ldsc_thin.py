@@ -86,6 +86,9 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     genotype_indivs = find_obj(find_file)
     phenotype_info = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
     phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_info, on='IID')
+    ii = phenotype_info['Phenotype'] != 9
+    pheno_avg = np.mean(phenotype_info['Phenotype'][ii])
+    newsnp[np.logical_not(ii)] = avg
 
     n = len(array_indivs.IDList)
     m = len(genotype_indivs.IDList)
