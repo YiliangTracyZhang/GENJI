@@ -91,7 +91,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     
     # read bim/snp
     array_snps = snp_obj(snp_file)
-    farray_snps = snp_obj(fsnp_file)
+    farray_snps = fsnp_obj(fsnp_file)
     # snp list
     #m = len(array_snps.IDList)
     #annot_matrix, annot_colnames, keep_snps = None, None, None,
