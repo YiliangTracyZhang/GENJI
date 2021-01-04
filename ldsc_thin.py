@@ -25,6 +25,16 @@ def loj_bim(filter_df, array):
     return ii.to_numpy().nonzero()[0]
 
 
+def loj_fam(filter_df, array):
+    r = filter_df.columns[0]
+    l = array.IDList.columns[0]
+    merge_df = filter_df.iloc[:,[0]]
+    merge_df.loc[:,'keep'] = True
+    z = pd.merge(array.IDList, merge_df, how='left', left_on=l, right_on=r, sort=False)
+    ii = z['keep'] == True
+    return ii.to_numpy().nonzero()[0]
+
+
 def __filter_bim__(filter_df, array):
     merged_list = loj_bim(filter_df, array)
     len_merged_list = len(merged_list)
@@ -32,6 +42,17 @@ def __filter_bim__(filter_df, array):
         c = 'After merging, {0} SNPs remain'
     else:
         error_msg = 'No SNPs retained for analysis'
+        raise ValueError(error_msg)
+    return merged_list
+
+
+def __filter_fam__(filter_df, array):
+    merged_list = loj_fam(filter_df, array)
+    len_merged_list = len(merged_list)
+    if len_merged_list > 0:
+        c = 'After merging, {0} individuals in GWAS 1 remain'
+    else:
+        error_msg = 'No individuals retained for analysis'
         raise ValueError(error_msg)
     return merged_list
 
@@ -100,7 +121,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     m = len(genotype_indivs.IDList)
     # read keep_indivs
     keep_indivs_ref = None
-    keep_indivs_genotype = phenotype_info['IID']
+    keep_indivs_genotype = __filter_fam__(phenotype_info, genotype_indivs)
     # read genotype array
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps_ref,
         keep_indivs=keep_indivs_ref, mafMin=None)
