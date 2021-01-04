@@ -84,11 +84,17 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     # read fam
     array_indivs = ind_obj(ind_file)
     genotype_indivs = find_obj(find_file)
+
+    # read phenotype data
     phenotype_info = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
     phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_info, on='IID')
     ii = phenotype_info['Phenotype'] != 9
     pheno_avg = np.mean(phenotype_info['Phenotype'][ii])
-    newsnp[np.logical_not(ii)] = avg
+    phenotype_info['Phenotype'][np.logical_not(ii)] = pheno_avg
+    phenotype_denom = np.std(phenotype_info['Phenotype'])
+    if phenotype_denom == 0:
+        phenotype_denom = 1
+    phenotype_info['Phenotype'] = (phenotype_info['Phenotype'] - pheno_avg) / phenotype_denom
 
     n = len(array_indivs.IDList)
     m = len(genotype_indivs.IDList)
@@ -99,7 +105,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps_ref,
         keep_indivs=keep_indivs_ref, mafMin=None)
     geno_farray = farray_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
-        keep_indivs=None, mafMin=None)
+        keep_indivs=keep_indivs_genotype, mafMin=None)
 
     #determine block widths
 
