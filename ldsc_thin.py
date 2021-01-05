@@ -71,7 +71,7 @@ def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
 
-def _ldscore(bfile, genotype, phenotype, gwas_snps):
+def _ldscore(bfile, genotype, phenotype_data, gwas_snps):
     '''
     Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
     reference panel genotypes.
@@ -106,9 +106,8 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
     array_indivs = ind_obj(ind_file)
     genotype_indivs = find_obj(find_file)
 
-    # read phenotype data
-    phenotype_info = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
-    phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_info, on='IID')
+    # phenotype data
+    phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_data, on='IID')
     ii = phenotype_info['Phenotype'] != 9
     pheno_avg = np.mean(phenotype_info['Phenotype'][ii])
     phenotype_info['Phenotype'][np.logical_not(ii)] = pheno_avg
@@ -135,12 +134,7 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
 
     block_left = ld.getBlockLefts(coords, max_dist)
 
-    scale_suffix = ''
-
     lN = geno_array.ldScoreVarBlocks(block_left, 50, annot=annot_matrix)
-    col_prefix = "L2"
-        
-    ldscore_colnames = [col_prefix+scale_suffix]
 
     # print .ldscore. Output columns: CHR, BP, RS, [LD Scores]
     new_colnames = geno_array.colnames + ldscore_colnames
@@ -160,6 +154,10 @@ def _ldscore(bfile, genotype, phenotype, gwas_snps):
 
 
 def ldscore(bfile, genotype, phenotype, gwas_snps):
+    
+    # read phenotype data
+    phenotype_data = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
+
     df = None
     if '@' in bfile:
         all_dfs = []
@@ -167,9 +165,9 @@ def ldscore(bfile, genotype, phenotype, gwas_snps):
             cur_bfile = bfile.replace('@', str(i))
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(cur_bfile, cur_genotype, phenotype, gwas_snps))
+                all_dfs.append(_ldscore(cur_bfile, cur_genotype, phenotype_data, gwas_snps))
             else:
-                all_dfs.append(_ldscore(cur_bfile, genotype, phenotype, gwas_snps))
+                all_dfs.append(_ldscore(cur_bfile, genotype, phenotype_data, gwas_snps))
             print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
@@ -177,11 +175,11 @@ def ldscore(bfile, genotype, phenotype, gwas_snps):
             all_dfs = []
             for i in range(1, 23):
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(bfile, cur_genotype, phenotype, gwas_snps))
+                all_dfs.append(_ldscore(bfile, cur_genotype, phenotype_data, gwas_snps))
                 print('Computed LD scores for chromosome {}'.format(i))
             df = pd.concat(all_dfs)
         else:
-            df = _ldscore(bfile, genotype, phenotype, gwas_snps)
+            df = _ldscore(bfile, genotype, phenotype_data, gwas_snps)
 
     #numeric = df._get_numeric_data()
     #numeric[numeric < 0] = 0
