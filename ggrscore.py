@@ -71,40 +71,26 @@ def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
 
-def _ldscore(bfile, genotype, phenotype_data, gwas_snps):
-    '''
-    Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
-    reference panel genotypes.
+def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
 
-    Annot format is
-    chr snp bp cm <annotations>
+    snp_file, fsnp_file, snp_obj = bfile+'.bim', genotype+'.bim', ps.PlinkBIMFile
+    ind_file, find_file, ind_obj = bfile+'.fam', genotype+'.fam', ps.PlinkFAMFile
+    array_file, farray_file, array_obj = bfile+'.bed', genotype+'.bed', ld.PlinkBEDFile
 
-    '''
-
-    snp_file, snp_obj = bfile+'.bim', ps.PlinkBIMFile
-    ind_file, ind_obj = bfile+'.fam', ps.PlinkFAMFile
-    array_file, array_obj = bfile+'.bed', ld.PlinkBEDFile
-
-    fsnp_file, fsnp_obj = genotype+'.bim', ps.PlinkBIMFile
-    find_file, find_obj = genotype+'.fam', ps.PlinkFAMFile
-    farray_file, farray_obj = genotype+'.bed', ld.PlinkBEDFile
-    
     # read bim/snp
     array_snps = snp_obj(snp_file)
-    farray_snps = fsnp_obj(fsnp_file)
-    # snp list
-    #m = len(array_snps.IDList)
-    #annot_matrix, annot_colnames, keep_snps = None, None, None,
+    farray_snps = snp_obj(fsnp_file)
+
     annot_matrix = None
-    #n_annot = 1
+
+    # snp list
 
     keep_snps_ref = __filter_bim__(gwas_snps, array_snps)
     keep_snps_genotype = __filter_bim__(gwas_snps, farray_snps)
 
-
     # read fam
     array_indivs = ind_obj(ind_file)
-    genotype_indivs = find_obj(find_file)
+    genotype_indivs = ind_obj(find_file)
 
     # phenotype data
     phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_data, on='IID')
@@ -134,26 +120,17 @@ def _ldscore(bfile, genotype, phenotype_data, gwas_snps):
 
     block_left = ld.getBlockLefts(coords, max_dist)
 
-    lN = geno_array.ldScoreVarBlocks(block_left, 50, annot=annot_matrix)
+    lN = geno_array.ldScoreVarBlocks(geno_farray, phenotype_info, block_left, 50, annot=annot_matrix)
 
     # print .ldscore. Output columns: CHR, BP, RS, [LD Scores]
-    new_colnames = geno_array.colnames + ldscore_colnames
     df = pd.DataFrame.from_records(np.c_[geno_array.df, lN])
     df.columns = new_colnames
     df.drop(['CM','MAF'], axis=1)
 
-    # print LD Score summary
-    pd.set_option('display.max_rows', 200)
-    t = df.iloc[:,4:].describe()
-
-    np.seterr(divide='ignore', invalid='ignore')  # print NaN instead of weird errors
-    # print correlation matrix including all LD Scores and sample MAF
-
-    np.seterr(divide='raise', invalid='raise')
     return df
 
 
-def ldscore(bfile, genotype, phenotype, gwas_snps):
+def ggrscore(bfile, genotype, phenotype, gwas_snps):
     
     # read phenotype data
     phenotype_data = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
@@ -163,24 +140,23 @@ def ldscore(bfile, genotype, phenotype, gwas_snps):
         all_dfs = []
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
+            cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(cur_bfile, cur_genotype, phenotype_data, gwas_snps))
+                all_dfs.append(_ggrscore(cur_bfile, cur_genotype, phenotype_data, cur_gwas_snps))
             else:
-                all_dfs.append(_ldscore(cur_bfile, genotype, phenotype_data, gwas_snps))
+                all_dfs.append(_ggrscore(cur_bfile, genotype, phenotype_data, cur_gwas_snps))
             print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
         if '@' in genotype:
             all_dfs = []
             for i in range(1, 23):
+                cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ldscore(bfile, cur_genotype, phenotype_data, gwas_snps))
+                all_dfs.append(_ggrscore(bfile, cur_genotype, phenotype_data, cur_gwas_snps))
                 print('Computed LD scores for chromosome {}'.format(i))
             df = pd.concat(all_dfs)
         else:
-            df = _ldscore(bfile, genotype, phenotype_data, gwas_snps)
-
-    #numeric = df._get_numeric_data()
-    #numeric[numeric < 0] = 0
+            df = _ggrscore(bfile, genotype, phenotype_data, gwas_snps)
     return df

@@ -13,7 +13,7 @@ import argparse, os.path, sys
 import pandas as pd
 import numpy as np
 from prep import prep
-from ldsc_thin import ldscore, ggrscore
+from ggrscore import ggrscore
 from calculate import calculate
 
 
@@ -47,11 +47,10 @@ def pipeline(args):
     print('Preparing files for analysis...')
     gwas_snps, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2)
     print('Calculating LD scores...')
-    ld_scores, N1 = ldscore(args.bfile, args.genotype, args.phenotype, gwas_snps)
-    gwas_snps = gwas_snps[gwas_snps['SNP'].isin(ld_scores['SNP'])]
+    ggr_df, N1 = ggrscore(args.bfile, args.genotype, args.phenotype, gwas_snps)
     print('{} SNPs included in our analysis...'.format(len(gwas_snps)))
     print('Calculating genetic covariance...')
-    out = calculate(ld_scores, ggr_scores, y, N1, N2, args.h1, args.h2)
+    out = calculate(ggr_df, N1, N2, args.h1, args.h2)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
