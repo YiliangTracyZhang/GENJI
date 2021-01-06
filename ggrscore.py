@@ -110,7 +110,7 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
     # read genotype array
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps_ref,
         keep_indivs=keep_indivs_ref, mafMin=None)
-    geno_farray = farray_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
+    geno_farray = array_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
         keep_indivs=keep_indivs_genotype, mafMin=None)
 
     #determine block widths
@@ -120,12 +120,9 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
 
     block_left = ld.getBlockLefts(coords, max_dist)
 
-    lN = geno_array.ldScoreVarBlocks(geno_farray, phenotype_info, block_left, 50, annot=annot_matrix)
+    df = geno_array.ggrscoreVarBlocks(geno_farray, phenotype_info, gwas_snps, block_left, 50, annot=annot_matrix)
 
     # print .ldscore. Output columns: CHR, BP, RS, [LD Scores]
-    df = pd.DataFrame.from_records(np.c_[geno_array.df, lN])
-    df.columns = new_colnames
-    df.drop(['CM','MAF'], axis=1)
 
     return df
 

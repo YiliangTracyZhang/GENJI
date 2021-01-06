@@ -114,11 +114,11 @@ class __GenotypeArrayInMemory__(object):
     def __filter_maf_(geno, m, n, maf):
         raise NotImplementedError
 
-    def ldScoreVarBlocks(self, block_left, c, annot=None):
+    def ggrscoreVarBlocks(self, geno_farray, phenotype_info, gwas_snps, block_left, c, annot=None):
         '''Computes an unbiased estimate of L2(j) for j=1,..,M.'''
         func = lambda x: self.__l2_unbiased__(x, self.n)
         snp_getter = self.nextSNPs
-        return self.__corSumVarBlocks__(block_left, c, func, snp_getter, annot)
+        return self.__ggrscoreVarBlocks__(geno_farray, phenotype_info, gwas_snps, block_left, c, func, snp_getter, annot)
 
     def __l2_unbiased__(self, x, n):
         denom = n-2 if n > 2 else n  # allow n<2 for testing purposes
@@ -126,7 +126,7 @@ class __GenotypeArrayInMemory__(object):
         return sq - (1-sq) / denom
 
     # general methods for calculating sums of Pearson correlation coefficients
-    def __corSumVarBlocks__(self, block_left, c, func, snp_getter, annot=None):
+    def __ggrscoreVarBlocks__(self, geno_farray, phenotype_info, gwas_snps, block_left, c, func, snp_getter, annot=None):
         '''
         Parameters
         ----------
@@ -154,7 +154,8 @@ class __GenotypeArrayInMemory__(object):
             Estimates.
 
         '''
-        m, n = self.m, self.n
+        m = self.m 
+        n1, n2 = self.n, geno_farray.n
         block_sizes = np.array(np.arange(m) - block_left)
         block_sizes = np.ceil(block_sizes / c)*c
         if annot is None:
@@ -165,6 +166,8 @@ class __GenotypeArrayInMemory__(object):
                 raise ValueError('Incorrect number of SNPs in annot')
 
         n_a = annot.shape[1]  # number of annotations
+        y = np.zeros((m, n_a))
+        ggr = np.zeros((m, n_a))
         cor_sum = np.zeros((m, n_a))
         # b = index of first SNP for which SNP 0 is not included in LD Score
         bb = block_left > 0
