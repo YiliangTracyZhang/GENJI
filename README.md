@@ -1,6 +1,6 @@
 # KILOGNOVA
 
-Ji?o nï zën me yòng?
+Ying Gai Zhe Me Yong:
 
 ```
 python3 kilognova.py ./data/sumstats/ASD.txt.sumstats.gz ./data/sumstats/CP.txt.sumstats.gz \
