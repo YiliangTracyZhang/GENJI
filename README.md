@@ -1,6 +1,6 @@
 # KILOGNOVA
 
-??????
+Ji?o nï zën me yòng?
 
 ```
 python3 kilognova.py ./data/sumstats/ASD.txt.sumstats.gz ./data/sumstats/CP.txt.sumstats.gz \
