@@ -138,6 +138,8 @@ def ggrscore(bfile, genotype, phenotype, gwas_snps):
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
             cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
+            if len(cur_gwas_snps) == 0:
+                continue
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
                 cur_df, cur_N = _ggrscore(cur_bfile, cur_genotype, phenotype_data, cur_gwas_snps)
@@ -157,6 +159,8 @@ def ggrscore(bfile, genotype, phenotype, gwas_snps):
             N1 = float('inf')
             for i in range(1, 23):
                 cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
+                if len(cur_gwas_snps) == 0:
+                    continue
                 cur_genotype = genotype.replace('@', str(i))
                 cur_df, cur_N = _ggrscore(bfile, cur_genotype, phenotype_data, cur_gwas_snps)
                 if cur_N < N1:
