@@ -1,27 +1,11 @@
 #!/usr/bin/python
 from __future__ import division, print_function
-import multiprocessing
-from subprocess import call
 import numpy as np
 import pandas as pd
 import numpy.linalg as linalg
-from math import sqrt
-import ld.ldscore as ld
-import ld.parse as ps
-from ldsc_thin import __filter_bim__
+from sklearn import linear_model
 from scipy.stats import norm
 from collections import OrderedDict
-
-
-def nearest_Corr(input_mat):
-    d, v = linalg.eigh(input_mat)
-    A = (v * np.maximum(d, 0)).dot(v.T)
-    A = (A + A.T) / 2
-    multiplier = 1 / np.sqrt(np.diag(A))
-    A = A * multiplier
-    A = (A.T * multiplier).T
-    return A
-
 
 def calLocalCov(i, partition, geno_array, coords, bps, gwas_snps, ld_scores, n1, n2, pheno_corr, pheno_corr_var):
     m = len(gwas_snps)
@@ -175,7 +159,7 @@ def _supergnova(bfile, partition, thread, gwas_snps, ld_scores, n1, n2, pheno_co
     df = df.astype(convert_dict)
     return df
 
-def calculate(bfile, partition, thread, gwas_snps, ld_scores, n1, n2, pheno_corr, pheno_corr_var):
+def calculate(ggr_df, N1, N2, h1, h2):
     if thread is None:
         thread = multiprocessing.cpu_count()
         print('{C} CPUs are detected. Using {C} threads in computation  ... '.format(C=str(thread)))

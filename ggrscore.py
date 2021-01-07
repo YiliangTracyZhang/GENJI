@@ -81,8 +81,6 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
     array_snps = snp_obj(snp_file)
     farray_snps = snp_obj(fsnp_file)
 
-    annot_matrix = None
-
     # snp list
 
     keep_snps_ref = __filter_bim__(gwas_snps, array_snps)
@@ -120,11 +118,12 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
 
     block_left = ld.getBlockLefts(coords, max_dist)
 
-    df = geno_array.ggrscoreVarBlocks(geno_farray, phenotype_info, gwas_snps, block_left, 50, annot=annot_matrix)
+    y, ggr, cor_sum = geno_array.ggrscoreVarBlocks(geno_farray, phenotype_info, gwas_snps, block_left, 50)
 
     # print .ldscore. Output columns: CHR, BP, RS, [LD Scores]
+    df = pd.DataFrame({'y':y, 'ggr':ggr, 'l2':cor_sum})
 
-    return df
+    return df, len(phenotype_info)
 
 
 def ggrscore(bfile, genotype, phenotype, gwas_snps):
@@ -135,25 +134,36 @@ def ggrscore(bfile, genotype, phenotype, gwas_snps):
     df = None
     if '@' in bfile:
         all_dfs = []
+        N1 = float('inf')
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
             cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ggrscore(cur_bfile, cur_genotype, phenotype_data, cur_gwas_snps))
+                cur_df, cur_N = _ggrscore(cur_bfile, cur_genotype, phenotype_data, cur_gwas_snps)
+                if cur_N < N1:
+                    N1 = cur_N
+                all_dfs.append(cur_df)
             else:
-                all_dfs.append(_ggrscore(cur_bfile, genotype, phenotype_data, cur_gwas_snps))
+                cur_df, cur_N = _ggrscore(cur_bfile, genotype, phenotype_data, cur_gwas_snps)
+                if cur_N < N1:
+                    N1 = cur_N
+                all_dfs.append(cur_df)
             print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
         if '@' in genotype:
             all_dfs = []
+            N1 = float('inf')
             for i in range(1, 23):
                 cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
                 cur_genotype = genotype.replace('@', str(i))
-                all_dfs.append(_ggrscore(bfile, cur_genotype, phenotype_data, cur_gwas_snps))
+                cur_df, cur_N = _ggrscore(bfile, cur_genotype, phenotype_data, cur_gwas_snps)
+                if cur_N < N1:
+                    N1 = cur_N
+                all_dfs.append(cur_df)
                 print('Computed LD scores for chromosome {}'.format(i))
             df = pd.concat(all_dfs)
         else:
-            df = _ggrscore(bfile, genotype, phenotype_data, gwas_snps)
-    return df
+            df, N1 = _ggrscore(bfile, genotype, phenotype_data, gwas_snps)
+    return df, N1
