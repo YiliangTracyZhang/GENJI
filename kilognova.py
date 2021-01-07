@@ -65,9 +65,9 @@ parser.add_argument('sumstats',
 
 parser.add_argument('--bfile', required=True, type=str,
     help='Prefix for Plink .bed/.bim/.fam file of reference panel for the second trait.')
-parser.add_argument('--h1', required=True, type=int,
+parser.add_argument('--h1', required=True, type=float,
     help='The estimated heritability of the first trait')
-parser.add_argument('--h2', required=True, type=int,
+parser.add_argument('--h2', required=True, type=float,
     help='The estimated heritability of the second trait')
 parser.add_argument('--N2', type=int,
     help='N of the sumstats file for the second trait. If not provided, this value will be inferred from the sumstats arg.')
