@@ -44,15 +44,15 @@ def calculate(ggr_df, N1, N2, h1, h2):
 
     out = pd.DataFrame(OrderedDict(
         [
-            ('rho', rho),
-            ('se', se_rho),
-            ('pvalue', norm.sf(abs(rho / se_rho)) * 2),
-            ('corr', rho / sqrt(h1 * h2)),
-            ('h1', h1),
-            ('h2', h2),
-            ('m', m),
-            ('N1', N1),
-            ('N2', N2)
+            ('rho', [rho]),
+            ('se', [se_rho]),
+            ('pvalue', [norm.sf(abs(rho / se_rho)) * 2)],
+            ('corr', [rho / sqrt(h1 * h2))],
+            ('h1', [h1]),
+            ('h2', [h2]),
+            ('m', [m]),
+            ('N1', [N1]),
+            ('N2', [N2])
         ]
     ))
     return out
