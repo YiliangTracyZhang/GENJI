@@ -32,7 +32,7 @@ def calculate(ggr_df, N1, N2, h1, h2):
     tot_X = X.T.dot((X.T * w).T)
     tot_Y = X.T.dot(y * w)
 
-    for j, (b_y, b_x, b_w) in enumerate(zip(np.array_split(y, nblock), np.array_split(ggr, nblock), np.array(w, nblock))):
+    for j, (b_y, b_x, b_w) in enumerate(zip(np.array_split(y, nblock), np.array_split(ggr, nblock), np.array_split(w, nblock))):
         cur_X = np.vstack([np.ones(len(b_x)), b_x]).T
         cur_tot_X = tot_X - cur_X.T.dot((cur_X.T * b_w).T)
         cur_tot_Y = tot_Y - cur_X.T.dot(b_y * b_w)
