@@ -15,6 +15,7 @@ def calculate(ggr_df, N1, N2, h1, h2):
     l2 = np.array(ggr_df['l2'])
     w1 = N1 * (N2 * h2 * l2 / m + 1)
     w2 = (np.sum(y) / np.sum(ggr) * ggr) ** 2
+    rho2 = np.sum(y) / np.sum(ggr) * m / sqrt(N2)
 
     w = 1 / (w1 + w2)
     lm = linear_model.LinearRegression().fit(pd.DataFrame(ggr), pd.DataFrame(y), sample_weight=w)
@@ -45,6 +46,7 @@ def calculate(ggr_df, N1, N2, h1, h2):
     out = pd.DataFrame(OrderedDict(
         [
             ('rho', [rho]),
+            ('rho2', [rho2]),
             ('se', [se_rho]),
             ('pvalue', [norm.sf(abs(rho / se_rho)) * 2]),
             ('corr', [rho / sqrt(h1 * h2)]),

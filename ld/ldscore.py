@@ -178,7 +178,7 @@ class __GenotypeArrayInMemory__(object):
         l_A = 0  # l_A := index of leftmost SNP in matrix A
         A1 = snp_getter(b)
         A2 = geno_farray.nextSNPs(b)
-        flip = np.array(-(gwas_snps['reversed'][l_A:b] * 2) + 1)
+        flip = np.array((gwas_snps['reversed'][l_A:l_A+b] * 2) + 1)
         A2 *= flip
         Z2 = np.array(gwas_snps['Z_y'])
         y[l_A:l_A+b] = A2.T.dot(pheno) * Z2[l_A:l_A+b]
@@ -229,7 +229,7 @@ class __GenotypeArrayInMemory__(object):
 
             B1 = snp_getter(c)
             B2 = geno_farray.nextSNPs(c)
-            flip = np.array(-(gwas_snps['reversed'][l_B:l_B+c] * 2) + 1)
+            flip = np.array((gwas_snps['reversed'][l_B:l_B+c] * 2) + 1)
             B2 *= flip
             y[l_B:l_B+c] = B2.T.dot(pheno) * Z2[l_B:l_B+c]
             np.dot(A1.T, B1 / n1, out=rfuncA1B1)
