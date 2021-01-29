@@ -126,10 +126,9 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
     return df, len(phenotype_info)
 
 
-def ggrscore(bfile, genotype, phenotype, gwas_snps):
-    
-    # read phenotype data
-    phenotype_data = pd.read_csv(phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
+def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp):
+
+    ovp_sample = pd.read_csv(ovp_sample, header=None, names=['IID'], delim_whitespace=True)
 
     df = None
     if '@' in bfile:
@@ -142,16 +141,15 @@ def ggrscore(bfile, genotype, phenotype, gwas_snps):
                 continue
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                cur_df, cur_N = _ggrscore(cur_bfile, cur_genotype, phenotype_data, cur_gwas_snps)
+                cur_df, cur_N = _ggrscore(cur_bfile, cur_genotype, cur_gwas_snps)
                 if cur_N < N1:
                     N1 = cur_N
                 all_dfs.append(cur_df)
             else:
-                cur_df, cur_N = _ggrscore(cur_bfile, genotype, phenotype_data, cur_gwas_snps)
+                cur_df, cur_N = _ggrscore(cur_bfile, genotype, cur_gwas_snps)
                 if cur_N < N1:
                     N1 = cur_N
                 all_dfs.append(cur_df)
-            print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
         if '@' in genotype:
@@ -162,12 +160,11 @@ def ggrscore(bfile, genotype, phenotype, gwas_snps):
                 if len(cur_gwas_snps) == 0:
                     continue
                 cur_genotype = genotype.replace('@', str(i))
-                cur_df, cur_N = _ggrscore(bfile, cur_genotype, phenotype_data, cur_gwas_snps)
+                cur_df, cur_N = _ggrscore(bfile, cur_genotype, cur_gwas_snps)
                 if cur_N < N1:
                     N1 = cur_N
                 all_dfs.append(cur_df)
-                print('Computed LD scores for chromosome {}'.format(i))
             df = pd.concat(all_dfs)
         else:
-            df, N1 = _ggrscore(bfile, genotype, phenotype_data, gwas_snps)
+            df, N1 = _ggrscore(bfile, genotype, gwas_snps)
     return df, N1

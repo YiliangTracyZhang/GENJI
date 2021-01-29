@@ -47,10 +47,10 @@ def pipeline(args):
     print('Preparing files for analysis...')
     gwas_snps, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2)
     print('{} SNPs included in our analysis...'.format(len(gwas_snps)))
-    print('Calculating LD scores...')
-    ggr_df, N1 = ggrscore(args.bfile, args.genotype, args.phenotype, gwas_snps)
+    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.h1, args.h2, args.ovp)
     print('Calculating genetic covariance...')
-    out = calculate(ggr_df, N1, N2, args.h1, args.h2)
+    phenotype_data = pd.read_csv(args.phentype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
+    out = calculate(ggr_df, N2, Ns)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
@@ -71,6 +71,8 @@ parser.add_argument('--h2', required=True, type=float,
     help='The estimated heritability of the second trait')
 parser.add_argument('--N2', type=int,
     help='N of the sumstats file for the second trait. If not provided, this value will be inferred from the sumstats arg.')
+parser.add_argument('--ovp', type=str,
+    help='text file indicating the overlapping samples between the two GWASs. If not provided, the method will assume no sample overlap.')
 
 
 parser.add_argument('--out', required=True, type=str,
