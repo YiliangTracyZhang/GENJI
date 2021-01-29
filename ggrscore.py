@@ -126,14 +126,15 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
     return df, len(phenotype_info)
 
 
-def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp):
-
-    ovp_sample = pd.read_csv(ovp, header=None, names=['IID'], delim_whitespace=True)
+def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
+    if ovp == None:
+        ovp_sample = pd.DataFrame({'IID':[]})
+    else:
+        ovp_sample = pd.read_csv(ovp, header=None, names=['IID'], delim_whitespace=True)
 
     df = None
     if '@' in bfile:
         all_dfs = []
-        N1 = float('inf')
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
             cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
@@ -167,4 +168,4 @@ def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp):
             df = pd.concat(all_dfs)
         else:
             df, N1 = _ggrscore(bfile, genotype, gwas_snps)
-    return df, N1
+    return df
