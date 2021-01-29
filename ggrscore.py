@@ -128,7 +128,7 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
 
 def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp):
 
-    ovp_sample = pd.read_csv(ovp_sample, header=None, names=['IID'], delim_whitespace=True)
+    ovp_sample = pd.read_csv(ovp, header=None, names=['IID'], delim_whitespace=True)
 
     df = None
     if '@' in bfile:

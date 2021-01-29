@@ -46,7 +46,7 @@ def get_files(file_name):
             ValueError('No files matching {}'.format(file_name))
 
 
-def prep(bfile, genotype, sumstats2, N2):
+def prep(bfile, genotype, sumstats2, N2, phenotype):
     bim_files = get_files(bfile + '.bim')
     genotype_files = get_files(genotype + '.bim')
     # read in bim files
@@ -80,4 +80,15 @@ def prep(bfile, genotype, sumstats2, N2):
     else:
         N2 = summary_stats['N_y'].max()
     df.rename(columns={'CHR_ref':'CHR'}, inplace=True)
-    return df[['CHR', 'SNP', 'Z_y', 'reversed']], N2
+
+    phenotype_data = pd.read_csv(args.phenotype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
+    fam_file = get_files(genotype + '.fam')[0]
+    fam_data = pd.read_csv(fam_file, header=None, names=['FID', 'IID'], delim_whitespace=True, usecols=[0,1])
+    ggr_df = pd.merge(fam_data, phenotype_data, on=['IID'])
+    ggr_df = ggr_df[['IID']]
+    ggr_df['gg'] = 0
+    ggr_df['grg'] = 0
+    ggr_df['ggg'] = 0
+    ggr_df['gz'] = 0
+    ggr_df['grrg'] = 0
+    return df[['CHR', 'SNP', 'Z_y', 'reversed']], ggr_df, N2

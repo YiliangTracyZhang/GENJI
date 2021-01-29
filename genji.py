@@ -45,11 +45,10 @@ def pipeline(args):
         raise ValueError('--out flag points to an invalid path.')
 
     print('Preparing files for analysis...')
-    gwas_snps, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2)
+    gwas_snps, ggr_df, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2, args.phenotype)
     print('{} SNPs included in our analysis...'.format(len(gwas_snps)))
-    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.h1, args.h2, args.ovp)
+    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.h1, args.h2, args.ovp, ggr_df)
     print('Calculating genetic covariance...')
-    phenotype_data = pd.read_csv(args.phentype, header=None, names=['FID', 'IID', 'Phenotype'], delim_whitespace=True)
     out = calculate(ggr_df, N2, Ns)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
