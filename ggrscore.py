@@ -71,12 +71,11 @@ def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
 
-def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
+def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample):
 
     snp_file, fsnp_file, snp_obj = bfile+'.bim', genotype+'.bim', ps.PlinkBIMFile
     ind_file, find_file, ind_obj = bfile+'.fam', genotype+'.fam', ps.PlinkFAMFile
     array_file, farray_file, array_obj = bfile+'.bed', genotype+'.bed', ld.PlinkBEDFile
-
     # read bim/snp
     array_snps = snp_obj(snp_file)
     farray_snps = snp_obj(fsnp_file)
@@ -90,51 +89,35 @@ def _ggrscore(bfile, genotype, phenotype_data, gwas_snps):
     array_indivs = ind_obj(ind_file)
     genotype_indivs = ind_obj(find_file)
 
-    # phenotype data
-    phenotype_info = pd.merge(genotype_indivs.IDList, phenotype_data, on='IID')
-    ii = phenotype_info['Phenotype'] != 9
-    pheno_avg = np.mean(phenotype_info['Phenotype'][ii])
-    phenotype_info['Phenotype'][np.logical_not(ii)] = pheno_avg
-    phenotype_denom = np.std(phenotype_info['Phenotype'])
-    if phenotype_denom == 0:
-        phenotype_denom = 1
-    phenotype_info['Phenotype'] = (phenotype_info['Phenotype'] - pheno_avg) / phenotype_denom
-
     n = len(array_indivs.IDList)
     m = len(genotype_indivs.IDList)
     # read keep_indivs
     keep_indivs_ref = None
-    keep_indivs_genotype = __filter_fam__(phenotype_info, genotype_indivs)
+    keep_indivs_genotype = __filter_fam__(ggr_df, genotype_indivs)
     # read genotype array
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps_ref,
         keep_indivs=keep_indivs_ref, mafMin=None)
     geno_farray = array_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
         keep_indivs=keep_indivs_genotype, mafMin=None)
-
+    ovp_sample['ovp'] = True
+    ovp_index = pd.merge(genotype_indivs.IDList, ovp_sample, how='left', on='IID')['ovp'] == True
     #determine block widths
 
     max_dist = 1
     coords = np.array(array_snps.df['CM'])[geno_array.kept_snps]
 
     block_left = ld.getBlockLefts(coords, max_dist)
-
-    y, ggr, cor_sum = geno_array.ggrscoreVarBlocks(geno_farray, phenotype_info, gwas_snps, block_left, 50)
-
-    # print .ldscore. Output columns: CHR, BP, RS, [LD Scores]
-    df = pd.DataFrame({'y':y, 'ggr':ggr, 'l2':cor_sum})
-
-    return df, len(phenotype_info)
+    geno_array.ggrscoreVarBlocks(geno_farray, gwas_snps, ggr_df, ovp_index, block_left, 50)
 
 
 def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
-    if ovp == None:
+    if ovp is None:
         ovp_sample = pd.DataFrame({'IID':[]})
     else:
         ovp_sample = pd.read_csv(ovp, header=None, names=['IID'], delim_whitespace=True)
 
-    df = None
+    ovp_sample = pd.merge(ovp_sample, ggr_df[['IID']], on='IID')
     if '@' in bfile:
-        all_dfs = []
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
             cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
@@ -142,30 +125,19 @@ def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
                 continue
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                cur_df, cur_N = _ggrscore(cur_bfile, cur_genotype, cur_gwas_snps)
-                if cur_N < N1:
-                    N1 = cur_N
-                all_dfs.append(cur_df)
+                _ggrscore(cur_bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample)
             else:
-                cur_df, cur_N = _ggrscore(cur_bfile, genotype, cur_gwas_snps)
-                if cur_N < N1:
-                    N1 = cur_N
-                all_dfs.append(cur_df)
-        df = pd.concat(all_dfs)
+                _ggrscore(cur_bfile, genotype, cur_gwas_snps, ggr_df, ovp_sample)
+            print('Done with SNPs in chromosome {}'.format(i))
     else:
         if '@' in genotype:
-            all_dfs = []
-            N1 = float('inf')
             for i in range(1, 23):
                 cur_gwas_snps = gwas_snps[gwas_snps.iloc[:,0]==i].reset_index(drop=True)
                 if len(cur_gwas_snps) == 0:
                     continue
                 cur_genotype = genotype.replace('@', str(i))
-                cur_df, cur_N = _ggrscore(bfile, cur_genotype, cur_gwas_snps)
-                if cur_N < N1:
-                    N1 = cur_N
-                all_dfs.append(cur_df)
-            df = pd.concat(all_dfs)
+                _ggrscore(bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample)
+                print('Done with SNPs in chromosome {}'.format(i))
         else:
-            df, N1 = _ggrscore(bfile, genotype, gwas_snps)
-    return df
+            _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample)
+    return ggr_df

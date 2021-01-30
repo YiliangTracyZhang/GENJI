@@ -114,11 +114,11 @@ class __GenotypeArrayInMemory__(object):
     def __filter_maf_(geno, m, n, maf):
         raise NotImplementedError
 
-    def ggrscoreVarBlocks(self, geno_farray, phenotype_info, gwas_snps, block_left, c):
+    def ggrscoreVarBlocks(self, geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c):
         '''Computes an unbiased estimate of L2(j) for j=1,..,M.'''
         func = lambda x: self.__l2_unbiased__(x, self.n)
         snp_getter = self.nextSNPs
-        return self.__ggrscoreVarBlocks__(geno_farray, phenotype_info, gwas_snps, block_left, c, func, snp_getter)
+        return self.__ggrscoreVarBlocks__(geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c, func, snp_getter)
 
     def __l2_unbiased__(self, x, n):
         denom = n-2 if n > 2 else n  # allow n<2 for testing purposes
@@ -126,7 +126,7 @@ class __GenotypeArrayInMemory__(object):
         return sq - (1-sq) / denom
 
     # general methods for calculating sums of Pearson correlation coefficients
-    def __ggrscoreVarBlocks__(self, geno_farray, phenotype_info, gwas_snps, block_left, c, func, snp_getter):
+    def __ggrscoreVarBlocks__(self, geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c, func, snp_getter):
         '''
         Parameters
         ----------
