@@ -180,7 +180,7 @@ class __GenotypeArrayInMemory__(object):
         tmp_ggr['gz'] += A2.dot(Z2[l_A:l_A+b])
         rfuncA1B1, rfuncB1B1 = np.zeros((b, c)), np.zeros((c, c))
         rfuncA2B2, rfuncB2B2 = np.zeros((b, c)), np.zeros((c, c))
-        rfuncA1C1, rfuncC1C1 = np.zeros((b, c)), np.zeros((c, c))
+        rfuncRG = np.zeros((b, n2))
         if ns > 0:
             AS2 = A2[ovp_index,:]
         # chunk inside of block
@@ -194,6 +194,7 @@ class __GenotypeArrayInMemory__(object):
                 np.dot(AS2.T, BS2, out=rfuncA2B2)
                 tmp_ggr['ggg'] += np.sum(A2 * rfuncA2B2.dot(B2.T).T, axis=1)
             rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
+            rfuncRG += rfuncA1C1.dot(B2)
         # chunk to right of block
         b0 = b
         md = int(c*np.floor(m/c))
@@ -211,14 +212,25 @@ class __GenotypeArrayInMemory__(object):
                 A1 = np.hstack((A1[:, old_b-b+c:old_b], B1))
                 A2 = np.hstack((A2[:, old_b-b+c:old_b], B2))
                 l_A += old_b-b+c
+                if old_b-b+c > 0:
+                    tmp_RG = rfuncRG[:old_b-b+c,:]
+                    tmp_ggr['grrg'] += np.sum(tmp_RG ** 2, axis=0)
+                    rfuncRG = rfuncRG[old_b-b+c:old_b,:]
             elif l_B == b0 and b > 0:
                 A1 = A1[:, b0-b:b0]
                 A2 = A2[:, b0-b:b0]
                 l_A = b0-b
+                if l_A > 0:
+                    tmp_RG = rfuncRG[:b0-b,:]
+                    tmp_ggr['grrg'] += np.sum(tmp_RG ** 2, axis=0)
+                    rfuncRG = rfuncRG[b0-b:b0,:]
             elif b == 0:  # no SNPs to left in window, e.g., after a sequence gap
                 A1 = np.array(()).reshape((n1, 0))
                 A2 = np.array(()).reshape((n2, 0))
                 l_A = l_B
+                if rfuncRG.shape[0] > 0:
+                    tmp_ggr['grrg'] += np.sum(rfuncRG ** 2, axis=0)
+                    rfuncRG = np.array(()).reshape((0, n2))
             if l_B == md:
                 c = m - md
                 rfuncA1B1, rfuncB1B1 = np.zeros((b, c)), np.zeros((c, c))
@@ -246,6 +258,11 @@ class __GenotypeArrayInMemory__(object):
                 tmp_ggr['ggg'] += np.sum(B2 * rfuncB2B2.dot(B2.T).T, axis=1)
             rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
             rfuncC1C1 = rfuncB2B2 + (N2 - ns) * rfuncB1B1
+            rfuncRG += rfuncA1C1.dot(B2.T)
+            rfuncRG = np.vstack((rfuncRG, rfuncA1C1.T.dot(A2.T)+rfuncC1C1.dot(B2.T)))
+        tmp_ggr['grrg'] += np.sum(rfuncRG ** 2, axis=0)
+
+
 
 class PlinkBEDFile(__GenotypeArrayInMemory__):
     '''
