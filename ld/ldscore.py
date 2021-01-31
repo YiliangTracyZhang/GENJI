@@ -215,7 +215,7 @@ class __GenotypeArrayInMemory__(object):
                 if old_b-b+c > 0:
                     tmp_RG = rfuncRG[:old_b-b+c,:]
                     tmp_ggr['grrg'] += np.sum(tmp_RG ** 2, axis=0)
-                    rfuncRG = rfuncRG[old_b-b+c:old_b,:]
+                    rfuncRG = rfuncRG[old_b-b+c:,:]
             elif l_B == b0 and b > 0:
                 A1 = A1[:, b0-b:b0]
                 A2 = A2[:, b0-b:b0]
