@@ -114,11 +114,11 @@ class __GenotypeArrayInMemory__(object):
     def __filter_maf_(geno, m, n, maf):
         raise NotImplementedError
 
-    def ggrscoreVarBlocks(self, geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c):
+    def ggrscoreVarBlocks(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c):
         '''Computes an unbiased estimate of L2(j) for j=1,..,M.'''
         func = lambda x: self.__l2_unbiased__(x, self.n)
         snp_getter = self.nextSNPs
-        return self.__ggrscoreVarBlocks__(geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c, func, snp_getter)
+        return self.__ggrscoreVarBlocks__(geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter)
 
     def __l2_unbiased__(self, x, n):
         denom = n-2 if n > 2 else n  # allow n<2 for testing purposes
@@ -126,7 +126,7 @@ class __GenotypeArrayInMemory__(object):
         return sq - (1-sq) / denom
 
     # general methods for calculating sums of Pearson correlation coefficients
-    def __ggrscoreVarBlocks__(self, geno_farray, gwas_snps, ggr_df, ovp_index, block_left, c, func, snp_getter):
+    def __ggrscoreVarBlocks__(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter):
         '''
         Parameters
         ----------
@@ -155,16 +155,11 @@ class __GenotypeArrayInMemory__(object):
 
         '''
         m = self.m 
-        n1, n2 = self.n, geno_farray.n
+        n1, n2, ns = self.n, geno_farray.n, np.sum(ovp_index)
 
-        pheno = phenotype_info['Phenotype']
         block_sizes = np.array(np.arange(m) - block_left)
         block_sizes = np.ceil(block_sizes / c)*c
-        # number of annotations
-        y = np.zeros(m)
-        ggr = np.zeros(m)
-        cor_sum = np.zeros(m)
-        # b = index of first SNP for which SNP 0 is not included in LD Score
+        
         bb = block_left > 0
         b = bb.nonzero()
         if np.any(b):
@@ -181,20 +176,24 @@ class __GenotypeArrayInMemory__(object):
         flip = np.array((gwas_snps['reversed'][l_A:l_A+b] * 2) - 1)
         A2 *= flip
         Z2 = np.array(gwas_snps['Z_y'])
-        y[l_A:l_A+b] = A2.T.dot(pheno) * Z2[l_A:l_A+b]
+        tmp_ggr['gg'] += np.sum(A2**2, axis=1)
+        tmp_ggr['gz'] += A2.dot(Z2[l_A:l_A+b])
         rfuncA1B1, rfuncB1B1 = np.zeros((b, c)), np.zeros((c, c))
         rfuncA2B2, rfuncB2B2 = np.zeros((b, c)), np.zeros((c, c))
-        rfuncC, rfuncD = np.zeros((b, c)), np.zeros((c,c))
+        rfuncA1C1, rfuncC1C1 = np.zeros((b, c)), np.zeros((c, c))
+        if ns > 0:
+            AS2 = A2[ovp_index,:]
         # chunk inside of block
         for l_B in range(0, b, c):  # l_B := index of leftmost SNP in matrix B
             B1 = A1[:, l_B:l_B+c]
             B2 = A2[:, l_B:l_B+c]
             np.dot(A1.T, B1 / n1, out=rfuncA1B1)
-            np.dot(A2.T, B2, out=rfuncA2B2)
-            rfuncC = rfuncA1B1 * rfuncA2B2
-            ggr[l_A:l_A+b] += np.sum(rfuncC, axis=1)
-            rfuncA1B1 = func(rfuncA1B1)
-            cor_sum[l_A:l_A+b] += np.sum(rfuncA1B1, axis=1)
+            tmp_ggr['grg'] += np.sum(A2 * rfuncA1B1.dot(B2.T).T, axis=1)
+            if ns > 0:
+                BS2 = AS2[:, l_B:l_B+c]
+                np.dot(AS2.T, BS2, out=rfuncA2B2)
+                tmp_ggr['ggg'] += np.sum(A2 * rfuncA2B2.dot(B2.T).T, axis=1)
+            rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
         # chunk to right of block
         b0 = b
         md = int(c*np.floor(m/c))
@@ -225,30 +224,28 @@ class __GenotypeArrayInMemory__(object):
                 rfuncA1B1, rfuncB1B1 = np.zeros((b, c)), np.zeros((c, c))
                 rfuncA2B2, rfuncB2B2 = np.zeros((b, c)), np.zeros((c, c))
             if b != old_b:
-                rfuncA1B1, rfuncA2B2 = np.zeros((b, c)), np.zeros((b, c))
+                rfuncA1B1 = np.zeros((b, c))
+                rfuncA2B2 = np.zeros((b, c))
 
             B1 = snp_getter(c)
             B2 = geno_farray.nextSNPs(c)
             flip = np.array((gwas_snps['reversed'][l_B:l_B+c] * 2) - 1)
             B2 *= flip
-            y[l_B:l_B+c] = B2.T.dot(pheno) * Z2[l_B:l_B+c]
+            tmp_ggr['gg'] += np.sum(B2**2, axis=1)
+            tmp_ggr['gz'] += B2.dot(Z2[l_B:l_B+c])
             np.dot(A1.T, B1 / n1, out=rfuncA1B1)
-            np.dot(A2.T, B2, out=rfuncA2B2)
-            rfuncC = rfuncA1B1 * rfuncA2B2
-            ggr[l_A:l_A+b] += np.sum(rfuncC, axis=1)
-            ggr[l_B:l_B+c] += np.sum(rfuncC, axis=0)
-            rfuncA1B1 = func(rfuncA1B1)
-            cor_sum[l_A:l_A+b] += np.sum(rfuncA1B1, axis=1)
-            cor_sum[l_B:l_B+c] += np.sum(rfuncA1B1, axis=0)
+            tmp_ggr['grg'] += 2 * np.sum(A2 * rfuncA1B1.dot(B2.T).T, axis=1)
             np.dot(B1.T, B1 / n1, out=rfuncB1B1)
-            np.dot(B2.T, B2, out=rfuncB2B2)
-            rfuncD = rfuncB1B1 * rfuncB2B2
-            ggr[l_B:l_B+c] += np.sum(rfuncD, axis=0)
-            rfuncB1B1 = func(rfuncB1B1)
-            cor_sum[l_B:l_B+c] += np.sum(rfuncB1B1, axis=0)
-
-        return y, ggr, cor_sum
-
+            tmp_ggr['grg'] += np.sum(B2 * rfuncB1B1.dot(B2.T).T, axis=1)
+            if ns > 0:
+                AS2 = A2[ovp_index,:]
+                BS2 = B2[ovp_index,:]
+                np.dot(AS2.T, BS2, out=rfuncA2B2)
+                tmp_ggr['ggg'] += 2 * np.sum(A2 * rfuncA2B2.dot(B2.T).T, axis=1)
+                np.dot(BS2.T, BS2, out=rfuncB2B2)
+                tmp_ggr['ggg'] += np.sum(B2 * rfuncB2B2.dot(B2.T).T, axis=1)
+            rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
+            rfuncC1C1 = rfuncB2B2 + (N2 - ns) * rfuncB1B1
 
 class PlinkBEDFile(__GenotypeArrayInMemory__):
     '''

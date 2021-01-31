@@ -71,7 +71,7 @@ def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
 
-def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample):
+def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2):
 
     snp_file, fsnp_file, snp_obj = bfile+'.bim', genotype+'.bim', ps.PlinkBIMFile
     ind_file, find_file, ind_obj = bfile+'.fam', genotype+'.fam', ps.PlinkFAMFile
@@ -99,7 +99,6 @@ def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample):
         keep_indivs=keep_indivs_ref, mafMin=None)
     geno_farray = array_obj(farray_file, m, farray_snps, keep_snps=keep_snps_genotype,
         keep_indivs=keep_indivs_genotype, mafMin=None)
-    ovp_sample['ovp'] = True
     ovp_index = pd.merge(genotype_indivs.IDList, ovp_sample, how='left', on='IID')['ovp'] == True
     #determine block widths
 
@@ -107,16 +106,25 @@ def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample):
     coords = np.array(array_snps.df['CM'])[geno_array.kept_snps]
 
     block_left = ld.getBlockLefts(coords, max_dist)
-    geno_array.ggrscoreVarBlocks(geno_farray, gwas_snps, ggr_df, ovp_index, block_left, 50)
 
+    tmp_ggr = pd.DataFrame({'IID': genotype_indivs.IDList['IID'][geno_farray.keep_indivs], 'gg': 0, 
+        'grg': 0, 'ggg': 0, 'gz': 0, 'grrg': 0})
+    geno_array.ggrscoreVarBlocks(geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, 50)
+    tmp_ggr = pd.merge(ggr_df[['IID']], tmp_ggr, on='IID')
+    ggr_df['gg'] += tmp_ggr['gg']
+    ggr_df['grg'] += tmp_ggr['grg']
+    ggr_df['ggg'] += tmp_ggr['ggg']
+    ggr_df['gz'] += tmp_ggr['gz']
+    ggr_df['grrg'] += tmp_ggr['grrg']
 
-def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
+def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df, N2):
     if ovp is None:
         ovp_sample = pd.DataFrame({'IID':[]})
     else:
         ovp_sample = pd.read_csv(ovp, header=None, names=['IID'], delim_whitespace=True)
-
+    
     ovp_sample = pd.merge(ovp_sample, ggr_df[['IID']], on='IID')
+    ovp_sample['ovp'] = True
     if '@' in bfile:
         for i in range(1, 23):
             cur_bfile = bfile.replace('@', str(i))
@@ -125,9 +133,9 @@ def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
                 continue
             if '@' in genotype:
                 cur_genotype = genotype.replace('@', str(i))
-                _ggrscore(cur_bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample)
+                _ggrscore(cur_bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample, N2)
             else:
-                _ggrscore(cur_bfile, genotype, cur_gwas_snps, ggr_df, ovp_sample)
+                _ggrscore(cur_bfile, genotype, cur_gwas_snps, ggr_df, ovp_sample, N2)
             print('Done with SNPs in chromosome {}'.format(i))
     else:
         if '@' in genotype:
@@ -136,8 +144,10 @@ def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df):
                 if len(cur_gwas_snps) == 0:
                     continue
                 cur_genotype = genotype.replace('@', str(i))
-                _ggrscore(bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample)
+                _ggrscore(bfile, cur_genotype, cur_gwas_snps, ggr_df, ovp_sample, N2)
                 print('Done with SNPs in chromosome {}'.format(i))
         else:
-            _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample)
+            _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2)
+    ggr_df = ggr_df.merge(ovp_sample, on='IID', how='left')
+    ggr_df['ovp'] = ggr_df['ovp'] == True
     return ggr_df
