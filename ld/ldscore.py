@@ -194,7 +194,7 @@ class __GenotypeArrayInMemory__(object):
                 np.dot(AS2.T, BS2, out=rfuncA2B2)
                 tmp_ggr['ggg'] += np.sum(A2 * rfuncA2B2.dot(B2.T).T, axis=1)
             rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
-            rfuncRG += rfuncA1C1.dot(B2)
+            rfuncRG += rfuncA1C1.dot(B2.T)
         # chunk to right of block
         b0 = b
         md = int(c*np.floor(m/c))
