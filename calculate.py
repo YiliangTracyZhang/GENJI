@@ -8,8 +8,8 @@ from sklearn import linear_model
 from scipy.stats import norm
 from collections import OrderedDict
 
-def calculate(ggr_df, N1, N2, h1, h2):
-    m = len(ggr_df)
+def calculate(ggr_df, h1, h2, N2):
+    N1 = len(ggr_df)
     y = np.array(ggr_df['y'])
     ggr = np.array(ggr_df['ggr'])
     l2 = np.array(ggr_df['l2'])
