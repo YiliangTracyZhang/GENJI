@@ -31,7 +31,7 @@ def calculate(ggr_df, h1, h2, N2, m):
         xwy = (X.T * w).dot(y)
         beta = xwx.dot(xwy)
         rho = beta[1] * m * np.sqrt(N2)
-        sigma2 = (ywy - xwy.T.dot(xwx).dot(xwy)) / (N2 - 2)
+        sigma2 = (ywy - xwy.T.dot(xwx).dot(xwy)) / (N1 - 2)
         se_rho = np.sqrt(sigma2 * xwx[1][1]) * m * np.sqrt(N2) 
     else:
         rhomn = np.sum(x1 * w * y) / np.sum(x1 * w * x1)
@@ -41,7 +41,7 @@ def calculate(ggr_df, h1, h2, N2, m):
         xwx = 1 / np.sum(x1 * w * x1)
         xwy = np.sum(x1 * w * y)
         rho = xwx * xwy * m * np.sqrt(N2)
-        sigma2 = (ywy - xwy ** 2 * xwx) / (N2 - 1)
+        sigma2 = (ywy - xwy ** 2 * xwx) / (N1 - 1)
         se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
 
     out = pd.DataFrame(OrderedDict(
