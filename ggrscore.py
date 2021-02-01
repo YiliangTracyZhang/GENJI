@@ -150,3 +150,4 @@ def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, N2):
             _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2)
     ggr_df = ggr_df.merge(ovp_sample, on='IID', how='left')
     ggr_df['ovp'] = ggr_df['ovp'] == True
+    return ggr_df
