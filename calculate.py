@@ -4,49 +4,49 @@ import numpy as np
 import pandas as pd
 import numpy.linalg as linalg
 from math import sqrt
-from sklearn import linear_model
 from scipy.stats import norm
 from collections import OrderedDict
 
-def calculate(ggr_df, h1, h2, N2):
+def calculate(ggr_df, h1, h2, N2, m):
     N1 = len(ggr_df)
-    y = np.array(ggr_df['y'])
-    ggr = np.array(ggr_df['ggr'])
-    l2 = np.array(ggr_df['l2'])
-    w1 = N1 * (N2 * h2 * l2 / m + 1)
-    w2 = (np.sum(y) / np.sum(ggr) * ggr) ** 2
-    rho2 = np.sum(y) / np.sum(ggr) * m / sqrt(N2)
-
-    w = 1 / (w1 + w2)
-    lm = linear_model.LinearRegression().fit(pd.DataFrame(ggr), pd.DataFrame(y), sample_weight=w)
-    intercept = lm.intercept_[0]
-    rho_comb = lm.coef_[0]
-    w2 = (intercept + rho_comb * ggr) ** 2
-    w = 1 / (w1 + w2)
-
-    # Calculate Jackknife variance estimate
-
-    nblock = 200
-    q_block = np.empty(200)
-
-    X = np.vstack([np.ones(len(ggr)), ggr]).T
-    tot_X = X.T.dot((X.T * w).T)
-    tot_Y = X.T.dot(y * w)
-
-    for j, (b_y, b_x, b_w) in enumerate(zip(np.array_split(y, nblock), np.array_split(ggr, nblock), np.array_split(w, nblock))):
-        cur_X = np.vstack([np.ones(len(b_x)), b_x]).T
-        cur_tot_X = tot_X - cur_X.T.dot((cur_X.T * b_w).T)
-        cur_tot_Y = tot_Y - cur_X.T.dot(b_y * b_w)
-        coeff = linalg.inv(cur_tot_X).dot(cur_tot_Y)[1]
-        q_block[j] = coeff * m / sqrt(N2)
-
-    rho = np.mean(q_block)
-    se_rho = sqrt((nblock - 1) * np.sum((q_block - rho) ** 2) / nblock)
+    Ns = np.sum(ggr_df['ovp'])
+    y = ggr_df['Phenotype'] * ggr_df['gz']
+    x1 = ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']
+    w = (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
+    w = 1 / w
+    w = np.array(w)
+    if Ns > 0:
+        x0 = ggr_df['gg'] * ggr_df['ovp']
+        X = np.vstack((x0, x1)).T
+        xwx = (X.T * w).dot(X)
+        xwy = (X.T * w).dot(y)
+        beta = linalg.inv(xwx).dot(xwy)
+        rhomn = beta[1]
+        rhoen = beta[0]
+        w = (rhomn * x1 + rhoen * x0) ** 2 + (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
+        w = 1 / w
+        w = np.array(w)
+        ywy = np.sum(y * w * y)
+        xwx = linalg.inv((X.T * w).dot(X))
+        xwy = (X.T * w).dot(y)
+        beta = xwx.dot(xwy)
+        rho = beta[1] * m * np.sqrt(N2)
+        sigma2 = (ywy - xwy.T.dot(xwx).dot(xwy)) / (N2 - 2)
+        se_rho = np.sqrt(sigma2 * xwx[1][1]) * m * np.sqrt(N2) 
+    else:
+        rhomn = np.sum(x1 * w * y) / np.sum(x1 * w * x1)
+        w = (rhomn * x1) ** 2 + (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
+        w = 1 / w
+        ywy = np.sum(y * w * y)
+        xwx = 1 / np.sum(x1 * w * x1)
+        xwy = np.sum(x1 * w * y)
+        rho = xwx * xwy
+        sigma2 = (ywy - xwy ** 2 * xwx) / (N2 - 1)
+        se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
 
     out = pd.DataFrame(OrderedDict(
         [
             ('rho', [rho]),
-            ('rho2', [rho2]),
             ('se', [se_rho]),
             ('pvalue', [norm.sf(abs(rho / se_rho)) * 2]),
             ('corr', [rho / sqrt(h1 * h2)]),
