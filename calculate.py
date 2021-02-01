@@ -40,7 +40,7 @@ def calculate(ggr_df, h1, h2, N2, m):
         ywy = np.sum(y * w * y)
         xwx = 1 / np.sum(x1 * w * x1)
         xwy = np.sum(x1 * w * y)
-        rho = xwx * xwy
+        rho = xwx * xwy * m * np.sqrt(N2)
         sigma2 = (ywy - xwy ** 2 * xwx) / (N2 - 1)
         se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
 
