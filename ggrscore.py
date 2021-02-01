@@ -117,7 +117,7 @@ def _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2):
     ggr_df['gz'] += tmp_ggr['gz']
     ggr_df['grrg'] += tmp_ggr['grrg']
 
-def ggrscore(bfile, genotype, gwas_snps, h1, h2, ovp, ggr_df, N2):
+def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, N2):
     if ovp is None:
         ovp_sample = pd.DataFrame({'IID':[]})
     else:

@@ -81,11 +81,16 @@ def prep(bfile, genotype, sumstats2, N2, phenotype):
         N2 = summary_stats['N_y'].max()
     df.rename(columns={'CHR_ref':'CHR'}, inplace=True)
 
-    ggr_df = pd.read_csv(phenotype, header=None, names=['IID'], delim_whitespace=True, usecols=[1])
+    ggr_df = pd.read_csv(phenotype, header=None, names=['IID', 'Phenotype'], delim_whitespace=True, usecols=[1, 2])
     fam_files = get_files(genotype + '.fam')
     for i in range(len(fam_files)):
         fam_data = pd.read_csv(fam_files[i], header=None, names=['IID'], delim_whitespace=True, usecols=[1])
         ggr_df = pd.merge(fam_data, ggr_df, on=['IID'])
+    ii = ggr_df['Phenotype'] != 9
+    pheno_avg = np.mean(ggr_df['Phenotype'][ii])
+    ggr_df['Phenotype'][np.logical_not(ii)] = pheno_avg
+    phenotype_denom = np.std(ggr_df['Phenotype'])
+    ggr_df['Phenotype'] = (ggr_df['Phenotype'] - pheno_avg) / phenotype_denom
     ggr_df['gg'] = 0
     ggr_df['grg'] = 0
     ggr_df['ggg'] = 0
