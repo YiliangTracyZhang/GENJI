@@ -49,7 +49,7 @@ def pipeline(args):
     print('{} SNPs included in our analysis...'.format(len(gwas_snps)))
     ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, N2)
     print('Calculating genetic covariance...')
-    out = calculate(ggr_df, args.h1, args.h2)
+    out = calculate(ggr_df, args.h1, args.h2, N2)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
