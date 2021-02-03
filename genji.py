@@ -45,7 +45,7 @@ def pipeline(args):
         raise ValueError('--out flag points to an invalid path.')
 
     print('Preparing files for analysis...')
-    gwas_snps, ggr_df, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2, args.phenotype)
+    gwas_snps, ggr_df, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2, args.phenotype, args.chr, args.start, args.end)
     m = len(gwas_snps)
     print('{} SNPs included in our analysis...'.format(m))
     ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, N2)
@@ -73,8 +73,14 @@ parser.add_argument('--N2', type=int,
     help='N of the sumstats file for the second trait. If not provided, this value will be inferred from the sumstats arg.')
 parser.add_argument('--ovp', type=str,
     help='text file indicating the overlapping samples between the two GWASs. If not provided, the method will assume no sample overlap.')
-
-
+parser.add_argument('--re', type=float,
+    help='The covariance of evironmental errors between trait 1 and trait 2 for the overlapping samples in the two studies. If not provided, the method will assume.')
+parser.add_argument('--chr', type=int,
+    help='')
+parser.add_argument('--start', type=int,
+    help='')
+parser.add_argument('--end', type=int,
+    help='')
 parser.add_argument('--out', required=True, type=str,
     help='Location to output results.')
 

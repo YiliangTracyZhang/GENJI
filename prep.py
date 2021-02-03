@@ -28,16 +28,24 @@ def allign_alleles(df):
     df = df[((matched_alleles_y|reversed_alleles_y)&(matched_alleles_gen|reversed_alleles_gen))]
 
 
-def get_files(file_name):
+def get_files(file_name, chr):
     if '@' in file_name:
         valid_files = []
-        for i in range(1, 23):
-            cur_file = file_name.replace('@', str(i))
+        if chr is None:
+            for i in range(1, 23):
+                cur_file = file_name.replace('@', str(i))
+                if os.path.isfile(cur_file):
+                    valid_files.append(cur_file)
+                else:
+                    raise ValueError('No file matching {} for chr {}'.format(
+                        file_name, i))
+        else:
+            cur_file = file_name.replace('@', chr)
             if os.path.isfile(cur_file):
                 valid_files.append(cur_file)
             else:
                 raise ValueError('No file matching {} for chr {}'.format(
-                    file_name, i))
+                    file_name, chr))
         return valid_files
     else:
         if os.path.isfile(file_name):
@@ -46,22 +54,27 @@ def get_files(file_name):
             ValueError('No files matching {}'.format(file_name))
 
 
-def prep(bfile, genotype, sumstats2, N2, phenotype):
-    bim_files = get_files(bfile + '.bim')
-    genotype_files = get_files(genotype + '.bim')
+def prep(bfile, genotype, sumstats2, N2, phenotype, chr, start, end):
+    bim_files = get_files(bfile + '.bim', chr)
+    genotype_files = get_files(genotype + '.bim', chr)
     # read in bim files
     bims = [pd.read_csv(f,
                         header=None,
                         names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
                         delim_whitespace=True) for f in bim_files]
     bim = pd.concat(bims, ignore_index=True)
-
     genotype_bims = [pd.read_csv(f,
                         header=None,
                         names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
                         delim_whitespace=True) for f in genotype_files]
     genotype_bim = pd.concat(genotype_bims, ignore_index=True)
-
+    if chr is not None:
+        if start is None:
+            start = 0
+        if end is None:
+            end = float('inf')
+        genotype_bim = genotype_bim[np.logical_and(np.logical_and(genotype_bim['CHR']==chr, genotype_bim['BP']<=end), genotype_bim['BP']>=start)].reset_index(drop=True)
+        bim = bim[np.logical_and(np.logical_and(bim['CHR']==chr, bim['BP']<=end), bim['BP']>=start)].reset_index(drop=True)
     summary_stats = pd.read_csv(sumstats2, delim_whitespace=True)
 
     # rename cols
@@ -82,7 +95,7 @@ def prep(bfile, genotype, sumstats2, N2, phenotype):
     df.rename(columns={'CHR_ref':'CHR'}, inplace=True)
 
     ggr_df = pd.read_csv(phenotype, header=None, names=['IID', 'Phenotype'], delim_whitespace=True, usecols=[1, 2])
-    fam_files = get_files(genotype + '.fam')
+    fam_files = get_files(genotype + '.fam', chr)
     for i in range(len(fam_files)):
         fam_data = pd.read_csv(fam_files[i], header=None, names=['IID'], delim_whitespace=True, usecols=[1])
         ggr_df = pd.merge(fam_data, ggr_df, on=['IID'])
