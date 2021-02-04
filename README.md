@@ -1,6 +1,6 @@
 # GENJI
 
-Ying Gai Zhe Me Yong:
+GENJI (Genetic-covariance EstimatioN Jointly using Individual-level and summary data) is a statistical framework to perform genetic covariance analysis. GENJI needs individual-level data for one trait and summary data for another to estimate genetic covariance.
 
 ```
 python3 genji.py  phenotype_data_for_trait_1 genotype_data_for_trait_1 summary_data_for_trait_2\
