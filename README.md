@@ -22,7 +22,7 @@ $ cd ./GENJI
 ```
 
 ```
-python3 genji.py  \[phenotype data for trait 1\] genotype_data_for_trait_1 summary_data_for_trait_2\
+python3 genji.py  [phenotype data for trait 1] genotype_data_for_trait_1 summary_data_for_trait_2\
 --bfile ref_panel\
 --h1 di_yi_ge_gwas_de_heritability_ke_yi_yong_reml_huo_zhe_ldsc_gu_ji\
 --h2 di_er_ge_gwas_de_heritability_ke_yi_yong_ldsc_xian_gu_ji_hao\
