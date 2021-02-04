@@ -23,11 +23,13 @@ $ cd ./GENJI
 
 ```
 python3 genji.py  [phenotype data for trait 1] [genotype data for trait 1] [summary stats for trait 2]\
---bfile ref_panel\
---h1 di_yi_ge_gwas_de_heritability_ke_yi_yong_reml_huo_zhe_ldsc_gu_ji\
---h2 di_er_ge_gwas_de_heritability_ke_yi_yong_ldsc_xian_gu_ji_hao\
---N2 zhi_xu_yao_di_er_ge_gwas_de_sample_size\
---out shu_chu_de_wei_zhi
-```
-
-plink bfile ru guo shi an zhao chromosome fen kai de, na me ke yi yong '@' lai dai ti shu zi. bi ru: eur_chr@_SNPmaf5.
+--bfile [genotype data for reference panel]\
+--h1 [heritability of trait 1] (optinal)\
+--h2 [heritability of trait 2] (optinal)\
+--N2 [sample size of trait 2] (optinal)\
+--ovp [overlapped samples in the two studies] (optional)\
+--re [covariance of environmental errors between trait 1 and trait 2] (optional)\
+--chr [chromosome of the genomic region] (optional)\
+--start [start point of the genomic region]\
+--end [end point of the genomic region]\
+--out [file location for the results]
