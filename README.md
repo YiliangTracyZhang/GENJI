@@ -12,6 +12,15 @@ The software is developed and tested in Linux and Mac OS environments. The follo
 4. **pandas**
 6. **bitarray**
 
+## Tutorial
+
+You can download GENJI by:
+
+```
+$ git clone https://github.com/YiliangTracyZhang/GENJI
+$ cd ./GENJI
+```
+
 ```
 python3 genji.py  phenotype_data_for_trait_1 genotype_data_for_trait_1 summary_data_for_trait_2\
 --bfile ref_panel\
