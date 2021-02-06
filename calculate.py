@@ -16,7 +16,7 @@ def calculate(ggr_df, h1, h2, N2, m):
     w = 1 / w
     w = np.array(w)
     if Ns > 0:
-        #x0 = ggr_df['gg'] * ggr_df['ovp']
+        x0 = ggr_df['gg'] * ggr_df['ovp']
         x0 = ggr_df['ovp']
         X = np.vstack((x0, x1)).T
         xwx = (X.T * w).dot(X)
