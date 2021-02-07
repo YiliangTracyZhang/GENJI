@@ -28,12 +28,6 @@ def calculate(ggr_df, h1, h2, N2, m):
         w = 1 / w
         w = np.array(w)
         y = y - rhoen * x0
-        ywy = np.sum(y * w * y)
-        xwx = 1 / np.sum(x1 * w * x1)
-        xwy = np.sum(x1 * w * y)
-        rho = xwx * xwy * m * np.sqrt(N2)
-        sigma2 = (ywy - xwy ** 2 * xwx) / (N1 - 1)
-        se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
         # xwx = linalg.inv((X.T * w).dot(X))
         # xwy = (X.T * w).dot(y)
         # beta = xwx.dot(xwy)
@@ -44,12 +38,18 @@ def calculate(ggr_df, h1, h2, N2, m):
         rhomn = np.sum(x1 * w * y) / np.sum(x1 * w * x1)
         w = (rhomn * x1) ** 2 + (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
         w = 1 / w
-        ywy = np.sum(y * w * y)
-        xwx = 1 / np.sum(x1 * w * x1)
-        xwy = np.sum(x1 * w * y)
-        rho = xwx * xwy * m * np.sqrt(N2)
-        sigma2 = (ywy - xwy ** 2 * xwx) / (N1 - 1)
-        se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
+        # ywy = np.sum(y * w * y)
+        # xwx = 1 / np.sum(x1 * w * x1)
+        # xwy = np.sum(x1 * w * y)
+        # rho = xwx * xwy * m * np.sqrt(N2)
+        # sigma2 = (ywy - xwy ** 2 * xwx) / (N1 - 1)
+        # se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
+    ywy = np.sum(y * w * y)
+    xwx = 1 / np.sum(x1 * w * x1)
+    xwy = np.sum(x1 * w * y)
+    rho = xwx * xwy * m * np.sqrt(N2)
+    sigma2 = (ywy - xwy ** 2 * xwx) / (N1 - 1)
+    se_rho = np.sqrt(sigma2 * xwx) * m * np.sqrt(N2)
 
     out = pd.DataFrame(OrderedDict(
         [
