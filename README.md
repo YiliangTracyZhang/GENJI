@@ -30,6 +30,6 @@ python3 genji.py  [phenotype data for trait 1] [genotype data for trait 1] [summ
 --ovp [overlapped samples in the two studies] (optional)\
 --re [covariance of environmental errors between trait 1 and trait 2] (optional)\
 --chr [chromosome of the genomic region] (optional)\
---start [start point of the genomic region]\
---end [end point of the genomic region]\
---out [file location for the results]
+--start [start point of the genomic region] (optional)\
+--end [end point of the genomic region] (optional)\
+--out [file location for the results] (optional)
