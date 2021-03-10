@@ -106,7 +106,7 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end)
     if covariates is not None:
         covariates_df = pd.read_csv(covariates, header=None, delim_whitespace=True)
         covariates_df = covariates_df.iloc[:, 1:]
-        covariates_df = covariates_df.rename(columns={0:'IID'})
+        covariates_df = covariates_df.rename(columns={1:'IID'})
         regression_df = pd.merge(ggr_df[['IID']], covariates_df, on=['IID'])
         ggr_df = pd.merge(ggr_df, covariates_df[['IID']], on=['IID'])
         colnames = regression_df.columns
