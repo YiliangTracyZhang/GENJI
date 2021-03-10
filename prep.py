@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from sklearn import linear_model
 
 def allign_alleles(df):
     """Look for reversed alleles and inverts the z-score for one of them.
@@ -54,7 +55,7 @@ def get_files(file_name, chr):
             ValueError('No files matching {}'.format(file_name))
 
 
-def prep(bfile, genotype, sumstats2, N2, phenotype, chr, start, end):
+def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end):
     bim_files = get_files(bfile + '.bim', chr)
     genotype_files = get_files(genotype + '.bim', chr)
     # read in bim files
@@ -102,8 +103,25 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, chr, start, end):
     ii = ggr_df['Phenotype'] != 9
     pheno_avg = np.mean(ggr_df['Phenotype'][ii])
     ggr_df['Phenotype'][np.logical_not(ii)] = pheno_avg
+    if covariates is not None:
+        covariates_df = pd.read_csv(covariates, header=None, delim_whitespace=True)
+        covariates_df = covariates_df.iloc[:, 1:]
+        covariates_df = covariates_df.rename(columns={0:'IID'})
+        regression_df = pd.merge(ggr_df[['IID']], covariates_df, on=['IID'])
+        ggr_df = pd.merge(ggr_df, covariates_df[['IID']], on=['IID'])
+        colnames = regression_df.columns
+        for jj in range(1, len(colnames)):
+            cur_col = colnames[jj]
+            iii = regression_df[cur_col] != 9
+            temp_avg = np.mean(regression_df[cur_col][iii])
+            regression_df[cur_col][np.logical_not(iii)] = temp_avg
+        lm = linear_model.LinearRegression().fit(regression_df.iloc[:, 1:], ggr_df[['Phenotype']])
+        ggr_df[['Phenotype']] = ggr_df[['Phenotype']] - lm.predict(regression_df.iloc[:,1:])
+
+
     phenotype_denom = np.std(ggr_df['Phenotype'])
-    ggr_df['Phenotype'] = (ggr_df['Phenotype'] - pheno_avg) / phenotype_denom
+    ggr_df['Phenotype'] = ggr_df['Phenotype'] / phenotype_denom
+
     ggr_df['gg'] = 0
     ggr_df['grg'] = 0
     ggr_df['ggg'] = 0
