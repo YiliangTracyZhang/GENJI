@@ -67,16 +67,15 @@ python3 genji.py  [phenotype data for trait 1] [genotype data for trait 1] [summ
 ### Explanation of Output
 The output will be a whitespace-delimited text file, with the rows corresponding to different annotations and the columns as such:
 
-- `chr`: The chromosome.
-- `start`: The start position of the genomic region from the input genome partition file.
-- `end`: The end position of the genomic region from the input genome partiition file.
-- `rho`: The estimation of local genetic covariance.
-- `corr`: The estimation of local genetic correlation.
-- `h2_1`: The estimation of local heritability of the first trait by method of moments.
-- `h2_2`: The estimation of local heritability of the second trait by method of moments.
-- `var`: The variance of the estimation of local genetic covariance.
-- `p`: The p value of local genetic covariance.
-- `m`: The number of SNPs involved in the estimation of local genetic covariance in the genomic region.
+- `rho`: The estimation of genetic covariance.
+- `se`: The standard error of the estimate.
+- `pvalue`: The p value of genetic covariance.
+- `corr`: The estimation of genetic correlation.
+- `h2_1`: The estimation of heritability of the first trait.
+- `h2_2`: The estimation of heritability of the second trait.
+- `m`: The number of SNPs involved in the estimation of genetic covariance.
+- `N1`: The sample size of study 1.
+- `N2`: The sample size of study 2.
 
 
 ## Credits
