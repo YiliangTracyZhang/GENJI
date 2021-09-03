@@ -80,6 +80,8 @@ The output will be a whitespace-delimited text file, with the rows corresponding
 
 ## Credits
 
+Those who use GENJI should cite [Zhang, Y.L. et al. Estimating genetic correlation jointly using individual-level and summary-level GWAS data. 2021](https://www.biorxiv.org/content/10.1101/2021.08.18.456908v1)
+
 The LD score calculation  and the estimation of phenotypic covariance are adapted from `ldsc.py` in  `ldsc` and `ldsc_thin.py` in `GNOVA`. See [Bulik-Sullivan, B. et al. An Atlas of Genetic Correlations across Human Diseases and Traits. Nature Genetics, 2015.](https://www.nature.com/articles/ng.3406) and [Lu, Q.S. et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. The American Journal of Human Genetics, 2017.](https://www.cell.com/ajhg/fulltext/S0002-9297(17)30453-6)
 
 
