@@ -21,7 +21,7 @@ $ git clone https://github.com/YiliangTracyZhang/GENJI
 $ cd ./GENJI
 ```
 
-You can download GENJI by this:
+You can download GENJI by:
 
 ```
 $ git clone https://github.com/YiliangTracyZhang/GENJI
