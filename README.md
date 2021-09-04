@@ -63,6 +63,9 @@ python3 genji.py ./example/input/BMI.phen ./example/input/nfbc_genotype_chr22 ./
 
 It should take about 30 seconds for this toy example to run. The correct output should be:
 
+| rho | se | pvalue | corr | h1 | h2 | m | N1 | N2
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.005622 | 0.003038 | 0.06421 | 0.02740 | 0.1710 | 0.2462 | 3371 | 5289 | 15918
 
 
 ### Explanation of Command-Line Arguments
