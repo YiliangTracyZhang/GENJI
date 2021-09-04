@@ -14,7 +14,7 @@ The software is developed and tested in Linux and Mac OS environments. The follo
 
 ## Tutorial
 
-You can download SUPERGNOVA by:
+You can download GENJI by:
 
 ```
 $ git clone https://github.com/YiliangTracyZhang/GENJI
