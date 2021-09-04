@@ -50,7 +50,7 @@ python3 genji.py  [phenotype data for trait 1] [genotype data for trait 1] [summ
 --out [file location for the results]
 ```
 
-As a toy example, at current directory, you can run the following command
+As a toy example, at current directory, you can run the following command:
 
 ```
 python3 genji.py ./example/input/BMI.phen ./example/input/nfbc_genotype_chr22 ./example/input/T2D.txt\ 
