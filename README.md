@@ -61,7 +61,7 @@ python3 genji.py ./example/input/BMI.phen ./example/input/nfbc_genotype_chr22 ./
 --out ./example/output/BMI_T2D_chr22.txt
 ```
 
-It should take about 30 seconds for this toy example to run. The correct output should be:
+It should take about 30 seconds for this toy example to run. The correct output of this example should be:
 
 | rho | se | pvalue | corr | h1 | h2 | m | N1 | N2
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
