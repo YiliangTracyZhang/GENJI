@@ -53,12 +53,12 @@ python3 genji.py  [phenotype data for trait 1] [genotype data for trait 1] [summ
 As a toy example, at current directory, you can run the following command
 
 ```
-python3 genji.py ./input/BMI.phen ./input/nfbc_genotype_chr22 ./input/T2D.txt\ 
---bfile ./input/eur_chr22\ 
---covarites ./input/covariates_nfbc.txt\ 
+python3 genji.py ./example/input/BMI.phen ./example/input/nfbc_genotype_chr22 ./example/input/T2D.txt\ 
+--bfile ./example/input/eur_chr22\ 
+--covarites ./example/input/covariates_nfbc.txt\ 
 --h1 0.171038\ 
 --h2 0.2462\
---out ./output/BMI_T2D_chr22.txt
+--out ./example/output/BMI_T2D_chr22.txt
 ```
 
 It should take about 30 seconds for this toy example to run. The correct output should be:
