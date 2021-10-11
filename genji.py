@@ -2,7 +2,7 @@
 '''
 genetic correlation estimation with individual data and summary stats
 
-KILOGNOVA
+GENJI
 
 Created on 2020-10-25
 
