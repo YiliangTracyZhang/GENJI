@@ -80,7 +80,7 @@ def _ns_regression(y, x1, gg, w0, rhomn, N1):
     rhomn0 = 0
     rhoen = 0
     ovp = np.random.binomial(1, 0.25, N1)
-    while abs((rhomn - rhomn0) / rhomn0) < 0.01:
+    while abs(rhomn - rhomn0) < 0.001:
         rhomn0 = rhomn
         x0 = gg * ovp
         w = (rhomn * x1 + rhoen * x0) ** 2 + w0
