@@ -48,9 +48,13 @@ def pipeline(args):
     gwas_snps, ggr_df, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2, args.phenotype, args.covariates, args.chr, args.start, args.end)
     m = len(gwas_snps)
     print('{} SNPs included in our analysis...'.format(m))
-    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, N2)
+    unknown = args.unknown_Ns
+    ovp = args.ovp
+    if unknown and ovp is not None:
+        raise ValueError('--ovp and --unknown_Ns should not be simutaneously set.')
+    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, ovp, ggr_df, N2)
     print('Calculating genetic covariance...')
-    out = calculate(ggr_df, args.h1, args.h2, N2, m)
+    out = calculate(ggr_df, args.h1, args.h2, unknown, N2, m)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
@@ -81,6 +85,8 @@ parser.add_argument('--start', type=int,
     help='')
 parser.add_argument('--end', type=int,
     help='')
+parser.add_argument('--unknown_Ns', action='store_true',
+    help='if the information of the overlapped samples is unknown')
 parser.add_argument('--out', required=True, type=str,
     help='Location to output results.')
 
