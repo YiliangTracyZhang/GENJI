@@ -114,11 +114,11 @@ class __GenotypeArrayInMemory__(object):
     def __filter_maf_(geno, m, n, maf):
         raise NotImplementedError
 
-    def ggrscoreVarBlocks(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c):
+    def ggrscoreVarBlocks(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, intercept):
         '''Computes an unbiased estimate of L2(j) for j=1,..,M.'''
         func = lambda x: self.__l2_unbiased__(x, self.n)
         snp_getter = self.nextSNPs
-        return self.__ggrscoreVarBlocks__(geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter)
+        self.__ggrscoreVarBlocks__(geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter, intercept)
 
     def __l2_unbiased__(self, x, n):
         denom = n-2 if n > 2 else n  # allow n<2 for testing purposes
@@ -126,7 +126,7 @@ class __GenotypeArrayInMemory__(object):
         return sq - (1-sq) / denom
 
     # general methods for calculating sums of Pearson correlation coefficients
-    def __ggrscoreVarBlocks__(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter):
+    def __ggrscoreVarBlocks__(self, geno_farray, gwas_snps, tmp_ggr, ovp_index, N2, block_left, c, func, snp_getter, intercept):
         '''
         Parameters
         ----------
@@ -175,6 +175,8 @@ class __GenotypeArrayInMemory__(object):
         A2 = geno_farray.nextSNPs(b)
         flip = np.array((gwas_snps['reversed'][l_A:l_A+b] * 2) - 1)
         A2 *= flip
+        if intercept is None:
+            gwas_snps['Z_x'].iloc[l_A:l_A+b] = A2.T.dot(tmp_ggr['Phenotype'])/np.sqrt(n2)
         Z2 = np.array(gwas_snps['Z_y'])
         tmp_ggr['gg'] += np.sum(A2**2, axis=1)
         tmp_ggr['gz'] += A2.dot(Z2[l_A:l_A+b])
@@ -195,6 +197,12 @@ class __GenotypeArrayInMemory__(object):
                 tmp_ggr['ggg'] += np.sum(A2 * rfuncA2B2.dot(B2.T).T, axis=1)
             rfuncA1C1 = rfuncA2B2 + (N2 - ns) * rfuncA1B1
             rfuncRG += rfuncA1C1.dot(B2.T)
+            if intercept is None:
+                xxab = np.dot(A2.T, B2 / n2)
+                gwas_snps['rxx'].iloc[l_A:l_A+b] += np.sum(rfuncA1B1*xxab, axis=1)
+                gwas_snps['xxxx'].iloc[l_A:l_A+b] += np.sum(np.square(xxab), axis=1)
+                rfuncA1B1sq = func(rfuncA1B1)
+                gwas_snps['l'].iloc[l_A:l_A+b] += np.sum(rfuncA1B1sq, axis=1)
         # chunk to right of block
         b0 = b
         md = int(c*np.floor(m/c))
@@ -260,6 +268,23 @@ class __GenotypeArrayInMemory__(object):
             rfuncC1C1 = rfuncB2B2 + (N2 - ns) * rfuncB1B1
             rfuncRG += rfuncA1C1.dot(B2.T)
             rfuncRG = np.vstack((rfuncRG, rfuncA1C1.T.dot(A2.T)+rfuncC1C1.dot(B2.T)))
+            if intercept is None:
+                gwas_snps['Z_x'][l_B:l_B+c] = B2.T.dot(tmp_ggr['Phenotype'])/np.sqrt(n2)
+                xxab = np.dot(A2.T, B2 / n2)
+                xxbb = np.dot(B2.T, B2 / n2)
+                rxxab = rfuncA1B1 * xxab
+                xxabsq = np.square(xxab)
+                gwas_snps['rxx'].iloc[l_A:l_A+b] += np.sum(rxxab, axis=1)
+                gwas_snps['rxx'].iloc[l_B:l_B+c] += np.sum(rxxab, axis=0)
+                gwas_snps['rxx'].iloc[l_B:l_B+c] += np.sum(rfuncB1B1 * xxbb, axis=1)
+                gwas_snps['xxxx'].iloc[l_A:l_A+b] += np.sum(xxabsq, axis=1)
+                gwas_snps['xxxx'].iloc[l_B:l_B+c] += np.sum(xxabsq, axis=0)
+                gwas_snps['xxxx'].iloc[l_B:l_B+c] += np.sum(np.square(xxbb), axis=1)
+                rfuncA1B1sq = func(rfuncA1B1)
+                rfuncB1B1sq = func(rfuncB1B1)
+                gwas_snps['l'].iloc[l_A:l_A+b] += np.sum(rfuncA1B1sq, axis=1)
+                gwas_snps['l'].iloc[l_B:l_B+c] += np.sum(rfuncA1B1sq, axis=0)
+                gwas_snps['l'].iloc[l_B:l_B+c] += np.sum(rfuncB1B1sq, axis=1)
         tmp_ggr['grrg'] += np.sum(rfuncRG ** 2, axis=0)
 
 

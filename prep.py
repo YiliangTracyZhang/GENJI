@@ -26,7 +26,8 @@ def allign_alleles(df):
         ((a[0] == 3 - a[5]) & (a[1] == 3 - a[4])))
     df['Z_y'] *= -2 * reversed_alleles_y + 1
     df['reversed'] = reversed_alleles_gen
-    df = df[((matched_alleles_y|reversed_alleles_y)&(matched_alleles_gen|reversed_alleles_gen))]
+    df.where(pd.Series(((matched_alleles_y|reversed_alleles_y)&(matched_alleles_gen|reversed_alleles_gen))), inplace=True)
+    df.dropna(inplace=True)
 
 
 def get_files(file_name, chr):
@@ -87,8 +88,7 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end)
     df = pd.merge(bim, genotype_bim, on=['SNP']).merge(summary_stats, on=['SNP'])
     # flip sign of z-score for allele reversals
     allign_alleles(df)
-    df = df.drop_duplicates(subset='SNP', keep=False)
-    
+    df = df.drop_duplicates(subset='SNP', keep=False).reset_index(drop=True)
     if N2 is not None:
         N2 = N2
     else:
@@ -122,9 +122,9 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end)
     phenotype_denom = np.std(ggr_df['Phenotype'])
     ggr_df['Phenotype'] = ggr_df['Phenotype'] / phenotype_denom
 
-    ggr_df['gg'] = 0
-    ggr_df['grg'] = 0
-    ggr_df['ggg'] = 0
-    ggr_df['gz'] = 0
-    ggr_df['grrg'] = 0
+    ggr_df['gg'] = 0.0
+    ggr_df['grg'] = 0.0
+    ggr_df['ggg'] = 0.0
+    ggr_df['gz'] = 0.0
+    ggr_df['grrg'] = 0.0
     return df[['CHR', 'SNP', 'Z_y', 'reversed']], ggr_df, N2

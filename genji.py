@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 from prep import prep
 from ggrscore import ggrscore
+from ggrscore import nsggrscore
 from calculate import calculate
 
 
@@ -48,13 +49,13 @@ def pipeline(args):
     gwas_snps, ggr_df, N2 = prep(args.bfile, args.genotype, args.sumstats, args.N2, args.phenotype, args.covariates, args.chr, args.start, args.end)
     m = len(gwas_snps)
     print('{} SNPs included in our analysis...'.format(m))
-    unknown = args.unknown_Ns
-    ovp = args.ovp
-    if unknown and ovp is not None:
-        raise ValueError('--ovp and --unknown_Ns should not be simutaneously set.')
-    ggr_df = ggrscore(args.bfile, args.genotype, gwas_snps, ovp, ggr_df, N2)
+    if args.ovpunknown and args.ovp is not None:
+        raise ValueError('--ovp and --ovpunknown should not be simutaneously set.')
+    if not args.ovpunknown and args.intercept is not None:
+        raise ValueError('When the information of overlapped samples is known, --intercept should not be provided.')
+    intercept = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, args.ovpunknown, args.intercept, N2, args.h1, args.h2)
     print('Calculating genetic covariance...')
-    out = calculate(ggr_df, args.h1, args.h2, unknown, N2, m)
+    out = calculate(ggr_df, args.h1, args.h2, intercept, N2, m)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
@@ -70,9 +71,9 @@ parser.add_argument('sumstats',
 parser.add_argument('--bfile', required=True, type=str,
     help='Prefix for Plink .bed/.bim/.fam file of reference panel for the second trait.')
 parser.add_argument('--h1', required=True, type=float,
-    help='The estimated heritability of the first trait')
+    help='The estimated heritability of the first trait.')
 parser.add_argument('--h2', required=True, type=float,
-    help='The estimated heritability of the second trait')
+    help='The estimated heritability of the second trait.')
 parser.add_argument('--N2', type=int,
     help='N of the sumstats file for the second trait. If not provided, this value will be inferred from the sumstats arg.')
 parser.add_argument('--ovp', type=str,
@@ -85,8 +86,10 @@ parser.add_argument('--start', type=int,
     help='')
 parser.add_argument('--end', type=int,
     help='')
-parser.add_argument('--unknown_Ns', action='store_true',
-    help='if the information of the overlapped samples is unknown')
+parser.add_argument('--ovpunknown', action='store_true',
+    help='If the information of the overlapped samples is unknown.')
+parser.add_argument('--intercept', type=float,
+    help='If the information of the overlapped samples is unknown, you can provide the intercept estimation of LDSC. If not provided, GENJI will estimate it.')
 parser.add_argument('--out', required=True, type=str,
     help='Location to output results.')
 
