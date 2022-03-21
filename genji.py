@@ -14,7 +14,6 @@ import pandas as pd
 import numpy as np
 from prep import prep
 from ggrscore import ggrscore
-from ggrscore import nsggrscore
 from calculate import calculate
 
 
