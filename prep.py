@@ -103,6 +103,7 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end)
     ii = ggr_df['Phenotype'] != 9
     pheno_avg = np.mean(ggr_df['Phenotype'][ii])
     ggr_df['Phenotype'][np.logical_not(ii)] = pheno_avg
+    ggr_df['Phenotype'] = ggr_df['Phenotype'] - pheno_avg
     if covariates is not None:
         covariates_df = pd.read_csv(covariates, header=None, delim_whitespace=True)
         covariates_df = covariates_df.iloc[:, 1:]
