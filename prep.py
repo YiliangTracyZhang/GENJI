@@ -86,6 +86,7 @@ def prep(bfile, genotype, sumstats2, N2, phenotype, covariates, chr, start, end)
 
     # take overlap between output and ref genotype files
     df = pd.merge(bim, genotype_bim, on=['SNP']).merge(summary_stats, on=['SNP'])
+    df = df[df['CHR_ref']==df['CHR_gen']]
     # flip sign of z-score for allele reversals
     allign_alleles(df)
     df = df.drop_duplicates(subset='SNP', keep=False).reset_index(drop=True)
