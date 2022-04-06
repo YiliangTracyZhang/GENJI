@@ -126,14 +126,14 @@ def __intercept__(zz, rxx, xxxx, l, h1, h2, N1, N2):
     w1 = 1 - h1 + N1 * h1 * xxxx / m
     w2 = 1 + N2 * h2 * l / m
     w3 = np.sqrt(N1 * N2) * rho * rxx / m
-    w = 1 / (w1 * w2 + w3 * w3)
+    w = 1 / ((w1 * w2 + w3 * w3) * rxx)
     w[(w < 0) | (w == np.inf) | (w == -np.inf)] = 0
     ldsc_model = linear_model.LinearRegression().fit(pd.DataFrame(rxx), pd.DataFrame(zz), sample_weight=w)
     intercept = ldsc_model.intercept_[0]
     
     rho = ldsc_model.coef_[0][0] * m / np.sqrt(N1 * N2)
     w3 = np.sqrt(N1 * N2) * rho * rxx / m + intercept
-    w = 1 / (w1 * w2 + w3 * w3)
+    w = 1 / ((w1 * w2 + w3 * w3) * rxx)
     ldsc_model = linear_model.LinearRegression().fit(pd.DataFrame(rxx), pd.DataFrame(zz), sample_weight=w)
     return ldsc_model.intercept_[0]
 
