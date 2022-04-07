@@ -15,7 +15,7 @@ def calculate(ggr_df, h1, h2, intercept, N2, m):
     y = ggr_df['Phenotype'] * ggr_df['gz']
     x1 = ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']
     w = (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
-    w = np.array(1 / (w * x1))
+    w = np.array(1 / w)
     x0 = ggr_df['gg'] * ggr_df['ovp']
     if Ns > 0:
         X = np.vstack((x0, x1)).T
@@ -30,7 +30,7 @@ def calculate(ggr_df, h1, h2, intercept, N2, m):
         rhoen = 0
 
     w = (rhomn * x1 + rhoen * x0) ** 2 + (h1 / m * ggr_df['gg'] + (1 - h1)) * (h2 / m * ggr_df['grrg'] + (1 - h2) * ggr_df['ggg'] + (N2 - Ns) * ggr_df['grg']) / N2
-    w = np.array(1 / (w * x1))
+    w = np.array(1 / w)
     y = y - rhoen * x0
     ywy = np.sum(y * w * y)
     xwx = 1 / np.sum(x1 * w * x1)
