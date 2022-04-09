@@ -135,8 +135,12 @@ def __intercept__(zz, rxx, xxxx, l, h1, h2, N1, N2):
     w3 = np.sqrt(N1 * N2) * rho * rxx / m + intercept
     w = 1 / ((w1 * w2 + w3 * w3) * rxx ** 1.5)
     w[(w < 0) | (w == np.inf) | (w == -np.inf)] = 0
-    ldsc_model = linear_model.LinearRegression().fit(pd.DataFrame(rxx), pd.DataFrame(zz), sample_weight=w)
-    return ldsc_model.intercept_[0]
+    nblock = 200
+    intercept_block = np.empty(nblock)
+    for j, (rxx_b, zz_b, w_b) in enumerate(zip(np.array_split(rxx, nblock), np.array_split(zz, nblock), np.array_split(w, nblock))):
+        ldsc_model = linear_model.LinearRegression().fit(pd.DataFrame(rxx_b), pd.DataFrame(zz_b), sample_weight=w_b)
+        intercept_block[j] = ldsc_model.intercept_[0]
+    return np.mean(intercept_block), np.sqrt(np.var(intercept_block) * (nblock - 1))
 
 def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, ovpunknown, intercept, N2, h1, h2):
     if ovp is None:
@@ -187,9 +191,10 @@ def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, ovpunknown, intercept, N2,
                 print('Done with SNPs in chromosome {}'.format(i))
         else:
             _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2, intercept)
+    intercept_se = 0.0
     if intercept is None:
         zz = gwas_snps['Z_x'] * gwas_snps['Z_y']
-        intercept = __intercept__(zz, gwas_snps['rxx'], gwas_snps['xxxx'], gwas_snps['l'], h1, h2, len(ggr_df), N2)
+        intercept, intercept_se = __intercept__(zz, gwas_snps['rxx'], gwas_snps['xxxx'], gwas_snps['l'], h1, h2, len(ggr_df), N2)
     ggr_df['ovp'] = ggr_df[['IID']].merge(ovp_sample, on='IID', how='left')['ovp']
     ggr_df['ovp'] = ggr_df['ovp'] == True
-    return intercept
+    return intercept, intercept_se

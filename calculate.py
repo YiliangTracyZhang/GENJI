@@ -9,7 +9,7 @@ from scipy.stats import norm
 from collections import OrderedDict
 import math
 
-def calculate(ggr_df, h1, h2, intercept, N2, m):
+def calculate(ggr_df, h1, h2, intercept, intercept_se, N2, m):
     N1 = len(ggr_df)
     Ns = np.sum(ggr_df['ovp'])
     y = ggr_df['Phenotype'] * ggr_df['gz']
@@ -42,6 +42,7 @@ def calculate(ggr_df, h1, h2, intercept, N2, m):
     if intercept != 0.0:
         T = np.sum(w * x1 * ggr_df['gg']) / np.sum(w * x1 * x1)
         rho = rho - T * m * intercept * np.sqrt(N2 / N1)
+        se_rho += intercept_se * T * m * np.sqrt(N2 / N1)
 
     out = pd.DataFrame(OrderedDict(
         [
