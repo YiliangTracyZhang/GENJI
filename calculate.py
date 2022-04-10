@@ -42,12 +42,13 @@ def calculate(ggr_df, h1, h2, intercept, ldsc_se, N2, m):
     if intercept != 0.0:
         T = np.sum(w * x1 * ggr_df['gg']) / np.sum(w * x1 * x1)
         rho = rho - T * m * intercept * np.sqrt(N2 / N1)
+        se_rho = ldsc_se
 
     out = pd.DataFrame(OrderedDict(
         [
             ('rho', [rho]),
-            ('se', [ldsc_se]),
-            ('ldsc_pvalue', [norm.sf(abs(rho / ldsc_se)) * 2]),
+            ('se', [se_rho]),
+            ('ldsc_pvalue', [norm.sf(abs(rho / se_rho)) * 2]),
             ('corr', [rho / sqrt(h1 * h2)]),
             ('h1', [h1]),
             ('h2', [h2]),

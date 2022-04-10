@@ -198,8 +198,6 @@ def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, ovpunknown, intercept, N2,
         else:
             _ggrscore(bfile, genotype, gwas_snps, ggr_df, ovp_sample, N2, intercept)
 
-    intercept_se = 0.0
-    ldsc_rho = 0.0
     ldsc_se = 0.0
     if intercept is None:
         zz = gwas_snps['Z_x'] * gwas_snps['Z_y']
