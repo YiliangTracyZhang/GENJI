@@ -52,9 +52,9 @@ def pipeline(args):
         raise ValueError('--ovp and --ovpunknown should not be simutaneously set.')
     if not args.ovpunknown and args.intercept is not None:
         raise ValueError('When the information of overlapped samples is known, --intercept should not be provided.')
-    intercept, ldsc_rho, ldsc_se = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, args.ovpunknown, args.intercept, N2, args.h1, args.h2)
+    intercept, intercept_se, ldsc_rho, ldsc_se = ggrscore(args.bfile, args.genotype, gwas_snps, args.ovp, ggr_df, args.ovpunknown, args.intercept, N2, args.h1, args.h2)
     print('Calculating genetic covariance...')
-    out = calculate(ggr_df, args.h1, args.h2, intercept, ldsc_rho, ldsc_se, N2, m)
+    out = calculate(ggr_df, args.h1, args.h2, intercept, intercept_se, ldsc_rho, ldsc_se, N2, m)
     out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
