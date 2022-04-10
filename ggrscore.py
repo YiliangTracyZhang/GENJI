@@ -146,7 +146,7 @@ def __intercept__(zz, rxx, xxxx, l, h1, h2, N1, N2):
         ldsc_model = linear_model.LinearRegression().fit(pd.DataFrame(rxx_b), pd.DataFrame(zz_b), sample_weight=w_b)
         intercept_block[j] = ldsc_model.intercept_[0]
         rho_block[j] = ldsc_model.coef_[0] * m /np.sqrt(N1 * N2)
-    return np.mean(intercept_block), np.sqrt(np.var(intercept_block) * (nblock - 1)), np.mean(rho_block), np.sqrt(np.var(rho_block) * (nblock - 1))
+    return np.mean(intercept_block), np.sqrt(np.var(rho_block) * (nblock - 1))
 
 def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, ovpunknown, intercept, N2, h1, h2):
     if ovp is None:
@@ -203,7 +203,7 @@ def ggrscore(bfile, genotype, gwas_snps, ovp, ggr_df, ovpunknown, intercept, N2,
     ldsc_se = 0.0
     if intercept is None:
         zz = gwas_snps['Z_x'] * gwas_snps['Z_y']
-        intercept, intercept_se, ldsc_rho, ldsc_se = __intercept__(zz, gwas_snps['rxx'], gwas_snps['xxxx'], gwas_snps['l'], h1, h2, len(ggr_df), N2)
+        intercept, ldsc_se = __intercept__(zz, gwas_snps['rxx'], gwas_snps['xxxx'], gwas_snps['l'], h1, h2, len(ggr_df), N2)
     ggr_df['ovp'] = ggr_df[['IID']].merge(ovp_sample, on='IID', how='left')['ovp']
     ggr_df['ovp'] = ggr_df['ovp'] == True
-    return intercept, intercept_se, ldsc_rho, ldsc_se
+    return intercept, ldsc_se

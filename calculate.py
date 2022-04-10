@@ -9,7 +9,7 @@ from scipy.stats import norm
 from collections import OrderedDict
 import math
 
-def calculate(ggr_df, h1, h2, intercept, intercept_se, ldsc_rho, ldsc_se, N2, m):
+def calculate(ggr_df, h1, h2, intercept, ldsc_se, N2, m):
     N1 = len(ggr_df)
     Ns = np.sum(ggr_df['ovp'])
     y = ggr_df['Phenotype'] * ggr_df['gz']
@@ -42,16 +42,12 @@ def calculate(ggr_df, h1, h2, intercept, intercept_se, ldsc_rho, ldsc_se, N2, m)
     if intercept != 0.0:
         T = np.sum(w * x1 * ggr_df['gg']) / np.sum(w * x1 * x1)
         rho = rho - T * m * intercept * np.sqrt(N2 / N1)
-        se_rho += T * m * intercept_se * np.sqrt(N2 / N1)
 
     out = pd.DataFrame(OrderedDict(
         [
             ('rho', [rho]),
-            ('ldsc_rho', [ldsc_rho]),
-            ('se', [se_rho]),
-            ('ldsc_se', [ldsc_se]),
-            ('pvalue', [norm.sf(abs(rho / se_rho)) * 2]),
-            ('ldsc_pvalue', [norm.sf(abs(ldsc_rho / ldsc_se)) * 2]),
+            ('se', [ldsc_se]),
+            ('ldsc_pvalue', [norm.sf(abs(rho / ldsc_se)) * 2]),
             ('corr', [rho / sqrt(h1 * h2)]),
             ('h1', [h1]),
             ('h2', [h2]),
