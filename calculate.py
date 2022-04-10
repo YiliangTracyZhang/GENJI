@@ -49,7 +49,7 @@ def calculate(ggr_df, h1, h2, intercept, intercept_se, ldsc_rho, ldsc_se, N2, m)
             ('rho', [rho]),
             ('ldsc_rho', [ldsc_rho]),
             ('se', [se_rho]),
-            ('ldsc_se', [ldsc_se])
+            ('ldsc_se', [ldsc_se]),
             ('pvalue', [norm.sf(abs(rho / se_rho)) * 2]),
             ('ldsc_pvalue', [norm.sf(abs(ldsc_rho / ldsc_se)) * 2])
             ('corr', [rho / sqrt(h1 * h2)]),
